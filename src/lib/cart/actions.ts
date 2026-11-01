@@ -11,7 +11,7 @@ function intField(formData: FormData, key: string) {
   return Number.isInteger(n) ? n : NaN;
 }
 
-/** Form fields: productId, quantity, pieces (per-flower products), addon_<id> = flowers or 1. */
+/** Form fields: productId, quantity, pieces (per-flower products), addon_<id> = how many, flowerColor / wrapperColor (repeatable). */
 export async function addToCartAction(_prev: AddToCartState, formData: FormData): Promise<AddToCartState> {
   const productId = String(formData.get("productId") ?? "");
   const quantity = intField(formData, "quantity");
@@ -23,6 +23,8 @@ export async function addToCartAction(_prev: AddToCartState, formData: FormData)
   const raw: LineConfig = {
     pieces: formData.has("pieces") ? intField(formData, "pieces") : undefined,
     addOns: product.addOns.map((a) => ({ id: a.id, qty: intField(formData, `addon_${a.id}`) || 0 })),
+    flowerColors: formData.getAll("flowerColor").map(String),
+    wrapperColors: formData.getAll("wrapperColor").map(String),
   };
   const config = normalizeConfig(product, raw);
   if ("error" in config) return { status: "error", message: config.error };

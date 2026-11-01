@@ -23,6 +23,8 @@ const productSchema = new Schema(
     madeToOrder: { type: Boolean, default: false },
     /** Shared add-ons ticked for this product (add-ons set to "all products" apply anyway). */
     addOnIds: { type: [{ type: Schema.Types.ObjectId, ref: "AddOn" }], default: [] },
+    /** Shared flower/wrapper colors ticked for this product (colors set to "all products" apply anyway). */
+    colorIds: { type: [{ type: Schema.Types.ObjectId, ref: "Color" }], default: [] },
     compareAtPrice: {
       type: Number,
       min: 0,

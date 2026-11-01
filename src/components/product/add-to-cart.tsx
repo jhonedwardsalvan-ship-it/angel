@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { addToCartAction } from "@/lib/cart/actions";
-import { MAX_ADD_ON_QTY, MAX_PIECES, maxQuantity, priceFor, type LineConfig } from "@/lib/catalog/configure";
+import { MAX_ADD_ON_QTY, MAX_COLORS, MAX_PIECES, maxQuantity, priceFor, type ColorOption, type LineConfig } from "@/lib/catalog/configure";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/catalog";
 
@@ -49,12 +49,51 @@ function Stepper({ label, value, min, max, onChange, id }: {
   );
 }
 
+/** Swatches; the buyer picks 1–MAX_COLORS. A pick beyond the max replaces the oldest one. */
+function ColorPicker({ label, colors, selected, onChange }: {
+  label: string;
+  colors: ColorOption[];
+  selected: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const toggle = (id: string) =>
+    onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id].slice(-MAX_COLORS));
+  const names = selected.map((id) => colors.find((c) => c.id === id)?.name).filter(Boolean).join(" & ");
+  return (
+    <fieldset className="stack gap-2">
+      <legend className="mb-1 text-sm font-medium">
+        {label} <span className="font-normal text-ink-muted">· choose 1 or {MAX_COLORS}</span>
+      </legend>
+      <div className="flex flex-wrap gap-2">
+        {colors.map((c) => {
+          const on = selected.includes(c.id);
+          return (
+            <button
+              key={c.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggle(c.id)}
+              className={`flex items-center gap-2 rounded-pill border px-3 py-1.5 text-sm transition-colors ${on ? "border-ink bg-surface" : "border-line hover:border-line-strong"}`}
+            >
+              <span className="size-5 rounded-pill border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
+              {c.name}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-xs text-ink-muted" aria-live="polite">{names ? `Selected: ${names}` : "None selected yet"}</p>
+    </fieldset>
+  );
+}
+
 export function AddToCart({ product }: { product: Product }) {
   const perPiece = product.pricing === "per_piece";
   const maxQty = maxQuantity(product);
   const [quantity, setQuantity] = useState(1);
   const [pieces, setPieces] = useState(product.minPieces);
   const [addOnQty, setAddOnQty] = useState<Record<string, number>>({});
+  const [flowerColors, setFlowerColors] = useState<string[]>([]);
+  const [wrapperColors, setWrapperColors] = useState<string[]>([]);
   const [state, action, pending] = useActionState(addToCartAction, undefined);
 
   if (maxQty <= 0) {
@@ -68,7 +107,13 @@ export function AddToCart({ product }: { product: Product }) {
   const config: LineConfig = {
     pieces: perPiece ? pieces : undefined,
     addOns: product.addOns.map((a) => ({ id: a.id, qty: addOnQty[a.id] ?? 0 })).filter((a) => a.qty > 0),
+    flowerColors,
+    wrapperColors,
   };
+  const missingColors = [
+    product.flowerColors.length > 0 && flowerColors.length === 0 ? "flower" : null,
+    product.wrapperColors.length > 0 && wrapperColors.length === 0 ? "wrapper" : null,
+  ].filter(Boolean);
   const { unitPrice, breakdown } = priceFor(product, config);
 
   return (
@@ -77,6 +122,15 @@ export function AddToCart({ product }: { product: Product }) {
       <input type="hidden" name="quantity" value={quantity} />
       {perPiece && <input type="hidden" name="pieces" value={pieces} />}
       {config.addOns.map((a) => <input key={a.id} type="hidden" name={`addon_${a.id}`} value={a.qty} />)}
+      {flowerColors.map((id) => <input key={id} type="hidden" name="flowerColor" value={id} />)}
+      {wrapperColors.map((id) => <input key={id} type="hidden" name="wrapperColor" value={id} />)}
+
+      {product.flowerColors.length > 0 && (
+        <ColorPicker label="Flower color" colors={product.flowerColors} selected={flowerColors} onChange={setFlowerColors} />
+      )}
+      {product.wrapperColors.length > 0 && (
+        <ColorPicker label="Wrapper color" colors={product.wrapperColors} selected={wrapperColors} onChange={setWrapperColors} />
+      )}
 
       {perPiece && (
         <div className="stack gap-2">
@@ -127,8 +181,12 @@ export function AddToCart({ product }: { product: Product }) {
         <div className="stack gap-1">
           <Stepper id="cfg-qty" label="quantity" value={quantity} min={1} max={maxQty} onChange={setQuantity} />
         </div>
-        <button type="submit" className="btn btn-primary btn-lg min-w-48 flex-1 px-4" disabled={pending}>
-          {pending ? "Adding…" : `Add to cart · ${formatPrice(unitPrice * quantity)}`}
+        <button type="submit" className="btn btn-primary btn-lg min-w-48 flex-1 px-4" disabled={pending || missingColors.length > 0}>
+          {pending
+            ? "Adding…"
+            : missingColors.length > 0
+              ? `Choose ${missingColors.join(" & ")} color${missingColors.length > 1 ? "s" : ""}`
+              : `Add to cart · ${formatPrice(unitPrice * quantity)}`}
         </button>
       </div>
       <p aria-live="polite" className="min-h-5 text-sm">

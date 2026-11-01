@@ -20,6 +20,10 @@ function parseAddOns(value: unknown): LineConfig["addOns"] {
     .slice(0, 10);
 }
 
+function parseIds(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((id): id is string => typeof id === "string" && OBJECT_ID.test(id)).slice(0, 2) : [];
+}
+
 /** Reads the cart cookie, dropping anything malformed. */
 export async function readCart(): Promise<CartEntry[]> {
   const raw = (await cookies()).get(COOKIE)?.value;
@@ -34,6 +38,8 @@ export async function readCart(): Promise<CartEntry[]> {
         quantity: Math.min(e.quantity as number, MAX_QUANTITY),
         pieces: Number.isInteger(e.pieces) && e.pieces > 0 ? (e.pieces as number) : undefined,
         addOns: parseAddOns(e.addOns),
+        flowerColors: parseIds(e.flowerColors),
+        wrapperColors: parseIds(e.wrapperColors),
       }))
       .slice(0, MAX_LINES);
   } catch {

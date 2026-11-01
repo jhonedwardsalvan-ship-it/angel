@@ -4,6 +4,7 @@ import { describeOptions } from "@/lib/catalog/configure";
 import { LOW_STOCK_THRESHOLD } from "@/lib/catalog/stock";
 import { connectDB } from "@/lib/db/mongoose";
 import { AddOn } from "@/models/add-on";
+import { Color } from "@/models/color";
 import { Category } from "@/models/category";
 import type { OrderStatus } from "@/lib/orders/status";
 import { Order } from "@/models/order";
@@ -12,6 +13,7 @@ import { StockAdjustment } from "@/models/stock-adjustment";
 import type {
   AdminAddOn,
   AdminCategory,
+  AdminColor,
   AdminOrder,
   AdminOrderRow,
   AdminProduct,
@@ -94,6 +96,7 @@ export async function getProduct(id: string): Promise<AdminProduct | null> {
     minPieces: p.minPieces ?? 5,
     madeToOrder: p.madeToOrder ?? false,
     addOnIds: (p.addOnIds ?? []).map(String),
+    colorIds: (p.colorIds ?? []).map(String),
     description: p.description ?? "",
     details: [...p.details],
     images: p.images.map(({ src, alt }) => ({ src, alt })),
@@ -259,5 +262,23 @@ export async function listAddOns(): Promise<AdminAddOn[]> {
     appliesTo: a.appliesTo === "all" ? "all" : "selected",
     isActive: a.isActive,
     productCount: countById.get(a._id.toString()) ?? 0,
+  }));
+}
+
+export async function listColors(): Promise<AdminColor[]> {
+  await connectDB();
+  const [rows, counts] = await Promise.all([
+    Color.find().sort({ kind: 1, isActive: -1, name: 1, _id: 1 }).lean(),
+    Product.aggregate<{ _id: Id; n: number }>([{ $unwind: "$colorIds" }, { $group: { _id: "$colorIds", n: { $sum: 1 } } }]),
+  ]);
+  const countById = new Map(counts.map((c) => [c._id.toString(), c.n]));
+  return rows.map((c) => ({
+    id: c._id.toString(),
+    name: c.name,
+    hex: c.hex,
+    kind: c.kind === "wrapper" ? "wrapper" : "flower",
+    appliesTo: c.appliesTo === "all" ? "all" : "selected",
+    isActive: c.isActive,
+    productCount: countById.get(c._id.toString()) ?? 0,
   }));
 }

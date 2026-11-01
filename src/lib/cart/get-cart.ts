@@ -3,7 +3,7 @@ import { cache } from "react";
 import { getProductsByIds } from "@/lib/catalog/queries";
 import { getStoreSettings } from "@/lib/settings";
 import type { Product } from "@/types/catalog";
-import { describeOptions, hasStockLimit, lineKey, normalizeConfig, priceFor, type LineConfig, type PriceLine } from "@/lib/catalog/configure";
+import { colorLines, describeOptions, hasStockLimit, lineKey, normalizeConfig, priceFor, type LineConfig, type PriceLine } from "@/lib/catalog/configure";
 import { readCart } from "./cart-cookie";
 import { deliveryFeeFor } from "./pricing";
 
@@ -58,7 +58,10 @@ export const getCart = cache(async (): Promise<Cart> => {
     // Options are re-checked against the product's current settings; invalid lines drop out.
     const config = normalizeConfig(product, raw);
     if ("error" in config) return [];
-    const { unitPrice, breakdown } = priceFor(product, config);
+    const priced = priceFor(product, config);
+    const unitPrice = priced.unitPrice;
+    // Colors don't change the price; they ride along as ₱0 lines so carts and orders list them.
+    const breakdown = [...priced.breakdown, ...colorLines(product, config)];
     const wanted = wantedByProduct.get(productId) ?? quantity;
     const issue: CartIssue | undefined = !hasStockLimit(product)
       ? undefined

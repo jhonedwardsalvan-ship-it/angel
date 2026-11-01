@@ -12,6 +12,7 @@ import { Product } from "@/models/product";
 import type { AdminFormState } from "@/types/admin";
 import { MAX_PIECES } from "@/lib/catalog/configure";
 import { AddOn } from "@/models/add-on";
+import { Color } from "@/models/color";
 import { deleteUnusedImages } from "../cloudinary";
 import { checked, isAllowedImageUrl, isDuplicateKey, parseImageLines, text, uploadedThisEdit, wholeNumber } from "../form";
 
@@ -45,6 +46,8 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
   // Ticked shared add-ons; unknown ids are ignored.
   const tickedAddOns = formData.getAll("addOnIds").map(String).filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 50);
   values.addOnIds = tickedAddOns.join(",");
+  const tickedColors = formData.getAll("colorIds").map(String).filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 100);
+  values.colorIds = tickedColors.join(",");
 
   if (images.length === 0) fieldErrors.images = "Upload at least one photo.";
   else if (images.some((img) => !isAllowedImageUrl(img.src))) {
@@ -66,6 +69,7 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
     price,
     minPieces,
     madeToOrder: pricing === "per_piece" || values.madeToOrder === "on",
+    colorIds: tickedColors.length ? (await Color.find({ _id: { $in: tickedColors } }, { _id: 1 }).lean()).map((c) => c._id) : [],
     addOnIds: tickedAddOns.length ? (await AddOn.find({ _id: { $in: tickedAddOns } }, { _id: 1 }).lean()).map((a) => a._id) : [],
     description: values.description,
     details,

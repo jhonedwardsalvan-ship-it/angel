@@ -1,4 +1,4 @@
-import type { AddOn } from "@/lib/catalog/configure";
+import type { AddOn, ColorOption } from "@/lib/catalog/configure";
 
 export type CatalogImage = { src: string; alt: string };
 
@@ -24,6 +24,8 @@ export type Product = {
   minPieces: number;
   madeToOrder: boolean;
   addOns: AddOn[];
+  flowerColors: ColorOption[];
+  wrapperColors: ColorOption[];
   compareAtPrice?: number;
   images: CatalogImage[];
   category: CategoryRef;

@@ -11,15 +11,16 @@ import { SelectField } from "@/components/forms/select-field";
 import { TextareaField } from "@/components/forms/textarea-field";
 import { saveProductAction } from "@/lib/admin/actions/products";
 import { formatPrice } from "@/lib/format";
-import type { AdminAddOn, AdminProduct } from "@/types/admin";
+import type { AdminAddOn, AdminColor, AdminProduct } from "@/types/admin";
 
 type ProductFormProps = {
   product?: AdminProduct;
   categories: { value: string; label: string }[];
   addOns: AdminAddOn[];
+  colors: AdminColor[];
 };
 
-export function ProductForm({ product, categories, addOns }: ProductFormProps) {
+export function ProductForm({ product, categories, addOns, colors }: ProductFormProps) {
   const [state, action, pending] = useActionState(saveProductAction, undefined);
   const initial: Record<string, string> = product
     ? {
@@ -41,6 +42,7 @@ export function ProductForm({ product, categories, addOns }: ProductFormProps) {
     : { isActive: "on", stock: "0" };
   const v = (k: string) => state?.values?.[k] ?? initial[k] ?? "";
   // After a failed save, keep what was ticked; otherwise the product's saved add-ons.
+  const selectedColors = new Set(state?.values?.colorIds !== undefined ? state.values.colorIds.split(",") : (product?.colorIds ?? []));
   const selectedAddOns = new Set(state?.values?.addOnIds !== undefined ? state.values.addOnIds.split(",") : (product?.addOnIds ?? []));
   const e = (k: string) => state?.fieldErrors?.[k];
 
@@ -104,6 +106,44 @@ export function ProductForm({ product, categories, addOns }: ProductFormProps) {
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="panel stack gap-5">
+        <div className="stack gap-1">
+          <h2 className="text-h4">Colors</h2>
+          <p className="text-sm text-ink-muted">
+            Tick the colors buyers can choose for this product (they pick 1 or 2 of each). Leave a group empty to skip it.{" "}
+            <Link href="/admin/colors" className="link">Manage colors</Link>
+          </p>
+        </div>
+        {(["flower", "wrapper"] as const).map((kind) => {
+          const list = colors.filter((c) => c.kind === kind && c.isActive);
+          return (
+            <fieldset key={kind} className="stack gap-2">
+              <legend className="mb-1 text-sm font-medium">{kind === "flower" ? "Flower colors" : "Wrapper colors"}</legend>
+              {list.length === 0 ? (
+                <p className="text-sm text-ink-muted">None yet.</p>
+              ) : (
+                <ul className="flex flex-wrap gap-2">
+                  {list.map((c) => (
+                    <li key={c.id}>
+                      <label className={`flex items-center gap-2 rounded-pill border border-line px-3 py-1.5 text-sm ${c.appliesTo === "all" ? "text-ink-muted" : "cursor-pointer"}`}>
+                        {c.appliesTo === "all" ? (
+                          <input type="checkbox" checked disabled className="size-4" aria-label={`${c.name} (all products)`} />
+                        ) : (
+                          <input type="checkbox" name="colorIds" value={c.id} defaultChecked={selectedColors.has(c.id)} className="size-4 accent-primary" />
+                        )}
+                        <span className="size-4 rounded-pill border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
+                        {c.name}
+                        {c.appliesTo === "all" && <span className="text-xs">· all products</span>}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </fieldset>
+          );
+        })}
       </div>
 
       <div className="panel stack gap-5">
