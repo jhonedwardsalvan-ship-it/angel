@@ -65,14 +65,13 @@ export function NavigationOverlay() {
 
   if (pendingFrom === null || pendingFrom !== here) return null;
   return (
-    <div className="fixed inset-0 z-[60] grid place-items-center bg-canvas/30 backdrop-blur-sm" role="status" aria-live="polite">
+    <div className="fixed inset-0 z-60 grid place-items-center bg-canvas/30 backdrop-blur-sm" role="status" aria-live="polite">
       <div className="panel stack items-center gap-3 px-10 py-8 text-center shadow-lg">
         <BloomingFlower className="size-16" />
         <p className="text-h4" aria-label="Flowering, loading">
           Flowering
           <AnimatedDots />
         </p>
-        <p className="eyebrow">Loading</p>
       </div>
     </div>
   );
