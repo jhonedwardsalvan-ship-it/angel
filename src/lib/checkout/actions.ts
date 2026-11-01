@@ -3,9 +3,11 @@
 import { randomBytes } from "node:crypto";
 import { Types } from "mongoose";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { writeCart } from "@/lib/cart/cart-cookie";
 import { getCart } from "@/lib/cart/get-cart";
 import { connectDB } from "@/lib/db/mongoose";
+import { sendNewOrderEmail } from "@/lib/email/new-order";
 import { releaseStock, reserveStock } from "@/lib/inventory";
 import { allowTrackedOrder } from "@/lib/orders/tracking";
 import { getSession } from "@/lib/session";
@@ -142,6 +144,26 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
     await releaseStock(lines, orderId);
     throw error;
   }
+
+  // Notify the shop owner once the buyer has been redirected; never blocks or fails checkout.
+  const notification = {
+    id: orderId.toString(),
+    number,
+    customer: { name: values.name, email: values.email, phone: values.phone },
+    delivery: {
+      recipientName: values.recipientName,
+      address: values.address,
+      city: values.city,
+      date: values.deliveryDate,
+      slot: values.deliverySlot as DeliverySlot,
+    },
+    cardMessage: values.cardMessage,
+    items: cart.lines.map((l) => ({ name: l.product.name, quantity: l.quantity, lineTotal: l.lineTotal })),
+    subtotal: cart.subtotal,
+    deliveryFee: cart.deliveryFee,
+    total: cart.total,
+  };
+  after(() => sendNewOrderEmail(notification));
 
   await writeLastOrder({
     number,
