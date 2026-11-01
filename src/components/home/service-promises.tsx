@@ -1,0 +1,26 @@
+import { CardIcon, LeafIcon, ShieldIcon, TruckIcon } from "@/components/icons";
+
+const promises = [
+  { icon: TruckIcon, title: "Same-day delivery", body: "Order before 2 PM for delivery today." },
+  { icon: LeafIcon, title: "Fresh for 7 days", body: "Or we'll replace your arrangement." },
+  { icon: CardIcon, title: "Handwritten card", body: "Add a personal note at no cost." },
+  { icon: ShieldIcon, title: "Secure checkout", body: "Cards, e-wallets and bank transfer." },
+];
+
+export function ServicePromises() {
+  return (
+    <section aria-label="Why shop with us" className="border-y border-line">
+      <ul className="container-page grid grid-cols-2 gap-x-6 gap-y-8 py-10 lg:grid-cols-4 lg:py-12">
+        {promises.map(({ icon: Icon, title, body }) => (
+          <li key={title} className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <Icon className="shrink-0 text-primary" width={28} height={28} />
+            <div>
+              <h3 className="text-sm font-medium md:text-base">{title}</h3>
+              <p className="mt-1 text-sm text-ink-muted">{body}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

@@ -1,0 +1,31 @@
+import { model, models, Schema, type InferSchemaType, type Model } from "mongoose";
+
+// No "server-only" or "@/" imports: scripts/seed.ts loads this file directly.
+
+export const imageSchema = new Schema(
+  {
+    src: { type: String, required: true, trim: true },
+    alt: { type: String, required: true, trim: true },
+  },
+  { _id: false },
+);
+
+const categorySchema = new Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    description: { type: String, default: "", trim: true },
+    image: { type: imageSchema, required: true },
+    sortOrder: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+  },
+  { timestamps: true },
+);
+
+categorySchema.index({ sortOrder: 1 });
+
+export type CategoryDoc = InferSchemaType<typeof categorySchema>;
+
+export const Category =
+  (models.Category as Model<CategoryDoc> | undefined) ??
+  model<CategoryDoc>("Category", categorySchema);
