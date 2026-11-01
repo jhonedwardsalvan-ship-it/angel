@@ -3,7 +3,9 @@ import type { Types } from "mongoose";
 import { cache } from "react";
 import { connectDB } from "@/lib/db/mongoose";
 import { Category as CategoryModel, type CategoryDoc } from "@/models/category";
+import { AddOn as AddOnModel } from "@/models/add-on";
 import { Product as ProductModel, type ProductDoc } from "@/models/product";
+import type { AddOn } from "@/lib/catalog/configure";
 import type { SearchFilters, SearchSort } from "@/lib/catalog/search";
 import type { Category, Product } from "@/types/catalog";
 
@@ -28,12 +30,31 @@ function toCategory(row: CategoryRow): Category {
   };
 }
 
-function toProduct(row: PopulatedProductRow & { category: NonNullable<PopulatedProductRow["category"]> }): Product {
+type SharedAddOn = AddOn & { appliesTo: string };
+
+/** Active add-ons, loaded once per request. */
+const getActiveAddOns = cache(async (): Promise<SharedAddOn[]> => {
+  await connectDB();
+  const rows = await AddOnModel.find({ isActive: true }).sort({ name: 1 }).lean();
+  return rows.map((a) => ({ id: a._id.toString(), name: a.name, price: a.price, appliesTo: a.appliesTo ?? "selected" }));
+});
+
+/** Add-ons offered on a product: every "all products" add-on plus the ones it ticked. */
+function addOnsFor(ticked: Types.ObjectId[], all: SharedAddOn[]): AddOn[] {
+  const ids = new Set(ticked.map(String));
+  return all.filter((a) => a.appliesTo === "all" || ids.has(a.id)).map(({ id, name, price }) => ({ id, name, price }));
+}
+
+function toProduct(row: PopulatedProductRow & { category: NonNullable<PopulatedProductRow["category"]> }, addOns: SharedAddOn[]): Product {
   return {
     id: row._id.toString(),
     slug: row.slug,
     name: row.name,
+    pricing: row.pricing === "per_piece" ? "per_piece" : "fixed",
     price: row.price,
+    minPieces: row.minPieces ?? 5,
+    madeToOrder: row.madeToOrder ?? false,
+    addOns: addOnsFor(row.addOnIds ?? [], addOns),
     compareAtPrice: row.compareAtPrice ?? undefined,
     images: row.images.map(({ src, alt }) => ({ src, alt })),
     category: { slug: row.category.slug, name: row.category.name },
@@ -60,8 +81,8 @@ async function findProducts(
     .sort(sort ?? { createdAt: 1, _id: 1 });
   if (limit) query = query.limit(limit);
 
-  const rows = (await query.lean()) as PopulatedProductRow[];
-  return rows.flatMap((row) => (row.category ? [toProduct({ ...row, category: row.category })] : []));
+  const [rows, addOns] = await Promise.all([query.lean() as Promise<PopulatedProductRow[]>, getActiveAddOns()]);
+  return rows.flatMap((row) => (row.category ? [toProduct({ ...row, category: row.category }, addOns)] : []));
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -157,7 +178,7 @@ export async function searchProducts(
     if (!match) return [];
     filter.category = match.id;
   }
-  if (inStock) filter.stock = { $gt: 0 };
+  if (inStock) filter.$and = [{ $or: [{ stock: { $gt: 0 } }, { madeToOrder: true }, { pricing: "per_piece" }] }];
 
   return findProducts(filter, { sort: SEARCH_SORT_ORDER[sort], limit });
 }

@@ -17,6 +17,10 @@ const orderItemSchema = new Schema(
     unitPrice: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
     lineTotal: { type: Number, required: true, min: 0 },
+    /** Options and their prices, e.g. [{ label: "20 flowers", amount: 1000 }, { label: "Glitter on 10 flowers", amount: 100 }]. */
+    breakdown: { type: [new Schema({ label: String, amount: Number }, { _id: false })], default: [] },
+    /** No stock was taken for this item, so cancelling doesn't put any back. */
+    madeToOrder: { type: Boolean, default: false },
   },
   { _id: false },
 );

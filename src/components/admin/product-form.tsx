@@ -3,27 +3,33 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { ProductImages } from "@/components/admin/product-images";
+import { ProductPricing } from "@/components/admin/product-pricing";
 import { CheckboxField } from "@/components/forms/checkbox-field";
 import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
 import { SelectField } from "@/components/forms/select-field";
 import { TextareaField } from "@/components/forms/textarea-field";
 import { saveProductAction } from "@/lib/admin/actions/products";
-import type { AdminProduct } from "@/types/admin";
+import { formatPrice } from "@/lib/format";
+import type { AdminAddOn, AdminProduct } from "@/types/admin";
 
 type ProductFormProps = {
   product?: AdminProduct;
   categories: { value: string; label: string }[];
+  addOns: AdminAddOn[];
 };
 
-export function ProductForm({ product, categories }: ProductFormProps) {
+export function ProductForm({ product, categories, addOns }: ProductFormProps) {
   const [state, action, pending] = useActionState(saveProductAction, undefined);
   const initial: Record<string, string> = product
     ? {
         name: product.name,
         slug: product.slug,
         category: product.category?.id ?? "",
+        pricing: product.pricing,
         price: String(product.price),
+        minPieces: String(product.minPieces),
+        madeToOrder: product.madeToOrder ? "on" : "",
         compareAtPrice: product.compareAtPrice ? String(product.compareAtPrice) : "",
         description: product.description,
         details: product.details.join("\n"),
@@ -34,6 +40,8 @@ export function ProductForm({ product, categories }: ProductFormProps) {
       }
     : { isActive: "on", stock: "0" };
   const v = (k: string) => state?.values?.[k] ?? initial[k] ?? "";
+  // After a failed save, keep what was ticked; otherwise the product's saved add-ons.
+  const selectedAddOns = new Set(state?.values?.addOnIds !== undefined ? state.values.addOnIds.split(",") : (product?.addOnIds ?? []));
   const e = (k: string) => state?.fieldErrors?.[k];
 
   return (
@@ -52,10 +60,11 @@ export function ProductForm({ product, categories }: ProductFormProps) {
 
       <div className="panel stack gap-5">
         <h2 className="text-h4">Pricing{product ? "" : " & stock"}</h2>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <FormField label="Price (₱)" name="price" inputMode="numeric" required defaultValue={v("price")} error={e("price")} />
-          <FormField label="Compare-at price (₱)" name="compareAtPrice" inputMode="numeric" defaultValue={v("compareAtPrice")} error={e("compareAtPrice")} hint="Optional. Higher than the price to show a sale." />
-        </div>
+        <ProductPricing
+          initial={{ pricing: v("pricing"), price: v("price"), minPieces: v("minPieces"), madeToOrder: v("madeToOrder") }}
+          errors={{ price: e("price"), minPieces: e("minPieces") }}
+        />
+        <FormField label="Compare-at price (₱)" name="compareAtPrice" inputMode="numeric" defaultValue={v("compareAtPrice")} error={e("compareAtPrice")} hint="Optional. Higher than the price to show a sale (fixed-price products)." />
         {product ? (
           <p className="text-sm text-ink-muted">
             Stock: <strong className="font-medium text-ink">{product.stock}</strong>.{" "}
@@ -64,6 +73,36 @@ export function ProductForm({ product, categories }: ProductFormProps) {
           </p>
         ) : (
           <FormField label="Starting stock" name="stock" inputMode="numeric" defaultValue={v("stock")} error={e("stock")} />
+        )}
+      </div>
+
+      <div className="panel stack gap-4">
+        <div className="stack gap-1">
+          <h2 className="text-h4">Add-ons</h2>
+          <p className="text-sm text-ink-muted">
+            Tick the extras buyers can add to this product. <Link href="/admin/add-ons" className="link">Manage add-ons</Link>
+          </p>
+        </div>
+        {addOns.filter((a) => a.isActive).length === 0 ? (
+          <p className="text-sm text-ink-muted">No add-ons yet.</p>
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {addOns.filter((a) => a.isActive).map((a) => (
+              <li key={a.id}>
+                {a.appliesTo === "all" ? (
+                  <span className="flex items-center gap-3 rounded-control border border-line px-3 py-2 text-sm text-ink-muted">
+                    <input type="checkbox" checked disabled className="size-4" aria-label={`${a.name} (all products)`} />
+                    {a.name} · {formatPrice(a.price)} each <span className="ml-auto text-xs">All products</span>
+                  </span>
+                ) : (
+                  <label className="flex cursor-pointer items-center gap-3 rounded-control border border-line px-3 py-2 text-sm">
+                    <input type="checkbox" name="addOnIds" value={a.id} defaultChecked={selectedAddOns.has(a.id)} className="size-4 accent-primary" />
+                    {a.name} · {formatPrice(a.price)} each
+                  </label>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

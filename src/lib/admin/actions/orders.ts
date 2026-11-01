@@ -49,7 +49,7 @@ export async function updateOrderStatusAction(formData: FormData) {
   );
   if (order && to === "cancelled") {
     await releaseStock(
-      order.items.map((i) => ({ productId: i.product.toString(), quantity: i.quantity })),
+      order.items.filter((i) => !i.madeToOrder).map((i) => ({ productId: i.product.toString(), quantity: i.quantity })),
       order._id,
       session.user.id,
     );

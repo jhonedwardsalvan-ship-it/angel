@@ -153,14 +153,15 @@ export default async function OrderPage({ params }: PageProps<"/orders/[number]"
 
         <OrderSummary subtotal={order.subtotal} deliveryFee={order.deliveryFee} total={order.total}>
           <ul className="stack gap-3 text-sm">
-            {order.items.map((item) => (
-              <li key={item.slug} className="flex items-center gap-3">
+            {order.items.map((item, n) => (
+              <li key={`${item.slug}-${n}`} className="flex items-center gap-3">
                 {item.image && (
                   <Image src={item.image} alt="" width={48} height={60} className="h-15 w-12 shrink-0 rounded-media object-cover" />
                 )}
                 <span className="flex-1">
                   <Link href={`/products/${item.slug}`} className="link-quiet">{item.name}</Link>{" "}
                   <span className="text-ink-muted">× {item.quantity}</span>
+                  {item.options.length > 0 && <span className="block text-xs text-ink-muted">{item.options.join(" · ")}</span>}
                 </span>
                 <span className="tabular-nums">{formatPrice(item.lineTotal)}</span>
               </li>

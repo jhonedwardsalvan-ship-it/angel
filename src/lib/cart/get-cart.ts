@@ -3,14 +3,23 @@ import { cache } from "react";
 import { getProductsByIds } from "@/lib/catalog/queries";
 import { getStoreSettings } from "@/lib/settings";
 import type { Product } from "@/types/catalog";
+import { describeOptions, hasStockLimit, lineKey, normalizeConfig, priceFor, type LineConfig, type PriceLine } from "@/lib/catalog/configure";
 import { readCart } from "./cart-cookie";
 import { deliveryFeeFor } from "./pricing";
 
 export type CartIssue = "sold-out" | "insufficient-stock";
 
 export type CartLine = {
+  /** Identifies the line for quantity changes (product + options). */
+  key: string;
   product: Product;
   quantity: number;
+  config: LineConfig;
+  /** One item with its options, at current prices. */
+  unitPrice: number;
+  breakdown: PriceLine[];
+  /** e.g. ["20 flowers", "Glitter on 10 flowers"]; empty for plain items. */
+  options: string[];
   lineTotal: number;
   /** Set when the line can't be ordered as-is. */
   issue?: CartIssue;
@@ -39,12 +48,36 @@ export const getCart = cache(async (): Promise<Cart> => {
     : [];
   const byId = new Map(products.map((p) => [p.id, p]));
 
-  const lines: CartLine[] = entries.flatMap(({ productId, quantity }) => {
+  // Stock is per product: lines of the same product with different options share it.
+  const wantedByProduct = new Map<string, number>();
+  for (const e of entries) wantedByProduct.set(e.productId, (wantedByProduct.get(e.productId) ?? 0) + e.quantity);
+
+  const lines: CartLine[] = entries.flatMap(({ productId, quantity, ...raw }) => {
     const product = byId.get(productId);
     if (!product) return [];
-    const issue: CartIssue | undefined =
-      product.stock <= 0 ? "sold-out" : quantity > product.stock ? "insufficient-stock" : undefined;
-    return [{ product, quantity, lineTotal: product.price * quantity, issue }];
+    // Options are re-checked against the product's current settings; invalid lines drop out.
+    const config = normalizeConfig(product, raw);
+    if ("error" in config) return [];
+    const { unitPrice, breakdown } = priceFor(product, config);
+    const wanted = wantedByProduct.get(productId) ?? quantity;
+    const issue: CartIssue | undefined = !hasStockLimit(product)
+      ? undefined
+      : product.stock <= 0
+        ? "sold-out"
+        : wanted > product.stock
+          ? "insufficient-stock"
+          : undefined;
+    return [{
+      key: lineKey(productId, config),
+      product,
+      quantity,
+      config,
+      unitPrice,
+      breakdown,
+      options: describeOptions(breakdown),
+      lineTotal: unitPrice * quantity,
+      issue,
+    }];
   });
 
   const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);

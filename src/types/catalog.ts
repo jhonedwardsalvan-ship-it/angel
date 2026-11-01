@@ -1,3 +1,5 @@
+import type { AddOn } from "@/lib/catalog/configure";
+
 export type CatalogImage = { src: string; alt: string };
 
 export type CategoryRef = { slug: string; name: string };
@@ -16,8 +18,12 @@ export type Product = {
   id: string;
   slug: string;
   name: string;
-  /** Whole pesos. */
+  pricing: "fixed" | "per_piece";
+  /** Whole pesos, per item (fixed) or per flower (per_piece). */
   price: number;
+  minPieces: number;
+  madeToOrder: boolean;
+  addOns: AddOn[];
   compareAtPrice?: number;
   images: CatalogImage[];
   category: CategoryRef;

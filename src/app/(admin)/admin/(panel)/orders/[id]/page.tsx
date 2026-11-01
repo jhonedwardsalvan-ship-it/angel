@@ -73,12 +73,15 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
               <table className="table">
                 <thead><tr><th>Product</th><th className="num">Price</th><th className="num">Qty</th><th className="num">Total</th></tr></thead>
                 <tbody>
-                  {order.items.map((i) => (
-                    <tr key={i.productId}>
+                  {order.items.map((i, n) => (
+                    <tr key={`${i.productId}-${n}`}>
                       <td>
                         <div className="flex items-center gap-3">
                           <div className="media size-10 shrink-0">{i.image && <Image src={i.image} alt="" fill sizes="40px" />}</div>
-                          <Link href={`/admin/products/${i.productId}`} className="hover:underline">{i.name}</Link>
+                          <div>
+                            <Link href={`/admin/products/${i.productId}`} className="hover:underline">{i.name}</Link>
+                            {i.options.length > 0 && <div className="text-xs text-ink-muted">{i.options.join(" · ")}</div>}
+                          </div>
                         </div>
                       </td>
                       <td className="num">{formatPrice(i.unitPrice)}</td>

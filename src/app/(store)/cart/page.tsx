@@ -40,7 +40,7 @@ export default async function CartPage() {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
           <ul className="border-t border-line">
             {cart.lines.map((line) => (
-              <CartLineItem key={line.product.id} line={line} />
+              <CartLineItem key={line.key} line={line} />
             ))}
           </ul>
 

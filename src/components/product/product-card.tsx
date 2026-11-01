@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { hasStockLimit, startingPrice } from "@/lib/catalog/configure";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/catalog";
 
@@ -31,7 +32,7 @@ export function ProductCard({
           preload={preload}
           loading={preload ? "eager" : "lazy"}
         />
-        {product.stock <= 0 ? (
+        {hasStockLimit(product) && product.stock <= 0 ? (
           <span className="badge badge-soldout badge-overlay">Sold out</span>
         ) : onSale ? (
           <span className="badge badge-sale badge-overlay">Sale</span>
@@ -46,7 +47,7 @@ export function ProductCard({
         <p className="price">
           <span className={onSale ? "price-sale" : undefined}>
             {onSale && <span className="sr-only">Sale price </span>}
-            {formatPrice(product.price)}
+            {product.pricing === "per_piece" ? `From ${formatPrice(startingPrice(product))}` : formatPrice(product.price)}
           </span>
           {onSale && (
             <s className="price-compare">

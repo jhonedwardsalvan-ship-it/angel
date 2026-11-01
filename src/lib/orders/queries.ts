@@ -2,6 +2,7 @@ import "server-only";
 import type { Types } from "mongoose";
 import { connectDB } from "@/lib/db/mongoose";
 import { Order } from "@/models/order";
+import { describeOptions } from "@/lib/catalog/configure";
 import { courierLabel } from "./couriers";
 import type { OrderStatus } from "./status";
 
@@ -17,7 +18,7 @@ type BuyerOrderRow = {
   cardMessage?: string;
   tracking?: { courier?: string; url?: string };
   payment: { method: string; status: string };
-  items: { slug: string; name: string; image?: string; unitPrice: number; quantity: number; lineTotal: number }[];
+  items: { slug: string; name: string; image?: string; unitPrice: number; quantity: number; lineTotal: number; breakdown?: { label: string; amount: number }[] }[];
   subtotal: number;
   deliveryFee: number;
   total: number;
@@ -39,7 +40,7 @@ export type BuyerOrder = {
   cardMessage: string;
   /** Courier label and live tracking link, once the order is out for delivery. */
   tracking: { courier: string; url: string };
-  items: { slug: string; name: string; image: string; unitPrice: number; quantity: number; lineTotal: number }[];
+  items: { slug: string; name: string; image: string; unitPrice: number; quantity: number; lineTotal: number; options: string[] }[];
   subtotal: number;
   deliveryFee: number;
   total: number;
@@ -80,6 +81,7 @@ function toBuyerOrder(o: BuyerOrderRow): BuyerOrder {
       unitPrice: i.unitPrice,
       quantity: i.quantity,
       lineTotal: i.lineTotal,
+      options: describeOptions(i.breakdown ?? []),
     })),
     subtotal: o.subtotal,
     deliveryFee: o.deliveryFee,

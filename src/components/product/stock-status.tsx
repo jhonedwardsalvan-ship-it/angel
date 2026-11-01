@@ -1,7 +1,9 @@
+import { hasStockLimit } from "@/lib/catalog/configure";
 import { getStockState } from "@/lib/catalog/stock";
 import type { Product } from "@/types/catalog";
 
 export function StockStatus({ product }: { product: Product }) {
+  if (!hasStockLimit(product)) return <p className="stock stock-in">Made to order</p>;
   switch (getStockState(product)) {
     case "sold-out":
       return <p className="stock stock-out">Sold out — back soon</p>;

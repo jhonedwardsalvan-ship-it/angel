@@ -61,6 +61,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
                   <span className={onSale ? "price-sale" : undefined}>
                     {onSale && <span className="sr-only">Sale price </span>}
                     {formatPrice(product.price)}
+                    {product.pricing === "per_piece" && <span className="text-base text-ink-muted"> per flower</span>}
                   </span>
                   {onSale && (
                     <s className="price-compare">
@@ -84,7 +85,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
 
             <p className="text-ink-muted">{product.description}</p>
 
-            <AddToCart productId={product.id} price={product.price} stock={product.stock} />
+            <AddToCart product={product} />
 
             {settings.productHighlights.length > 0 && (
               <ul className="stack gap-3 rounded-card bg-surface p-4 text-sm md:p-5">

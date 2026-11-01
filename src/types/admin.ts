@@ -26,6 +26,11 @@ export type AdminProductRow = {
 };
 
 export type AdminProduct = AdminProductRow & {
+  pricing: "fixed" | "per_piece";
+  minPieces: number;
+  madeToOrder: boolean;
+  /** Shared add-ons ticked for this product. */
+  addOnIds: string[];
   description: string;
   details: string[];
   images: CatalogImage[];
@@ -71,6 +76,8 @@ export type AdminOrder = AdminOrderRow & {
     unitPrice: number;
     quantity: number;
     lineTotal: number;
+    /** e.g. ["20 flowers", "Glitter on 10 flowers"]. */
+    options: string[];
   }[];
   subtotal: number;
   deliveryFee: number;
@@ -98,4 +105,14 @@ export type DashboardStats = {
   ordersToday: number;
   orders30d: number;
   revenue30d: number;
+};
+
+export type AdminAddOn = {
+  id: string;
+  name: string;
+  price: number;
+  appliesTo: "all" | "selected";
+  isActive: boolean;
+  /** Products that ticked it (only matters for "selected"). */
+  productCount: number;
 };

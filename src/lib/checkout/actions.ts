@@ -8,6 +8,7 @@ import { writeCart } from "@/lib/cart/cart-cookie";
 import { getCart } from "@/lib/cart/get-cart";
 import { connectDB } from "@/lib/db/mongoose";
 import { sendNewOrderEmail } from "@/lib/email/new-order";
+import { hasStockLimit } from "@/lib/catalog/configure";
 import { releaseStock, reserveStock } from "@/lib/inventory";
 import { allowTrackedOrder } from "@/lib/orders/tracking";
 import { getSession } from "@/lib/session";
@@ -33,6 +34,11 @@ const PHONE_PATTERN = /^[+\d][\d\s()-]{6,19}$/;
 
 function orderNumber() {
   return `AL-${Date.now().toString(36).toUpperCase()}-${randomBytes(2).toString("hex").toUpperCase()}`;
+}
+
+/** "Rose bouquet (20 flowers, Glitter on 10 flowers)" for emails and the confirmation page. */
+function withOptions(name: string, options: string[]) {
+  return options.length ? `${name} (${options.join(", ")})` : name;
 }
 
 function isDuplicateKey(error: unknown) {
@@ -83,7 +89,10 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
     };
   }
 
-  const lines = cart.lines.map((l) => ({ productId: l.product.id, quantity: l.quantity }));
+  // Made-to-order and per-flower items have no stock to take.
+  const lines = cart.lines
+    .filter((l) => hasStockLimit(l.product))
+    .map((l) => ({ productId: l.product.id, quantity: l.quantity }));
   const orderId = new Types.ObjectId();
   await connectDB();
 
@@ -120,9 +129,12 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
             slug: l.product.slug,
             name: l.product.name,
             image: l.product.images[0]?.src ?? "",
-            unitPrice: l.product.price,
+            unitPrice: l.unitPrice,
             quantity: l.quantity,
             lineTotal: l.lineTotal,
+            // Snapshot of the options and their prices at order time.
+            breakdown: l.breakdown,
+            madeToOrder: !hasStockLimit(l.product),
           })),
           subtotal: cart.subtotal,
           deliveryFee: cart.deliveryFee,
@@ -158,7 +170,7 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
       slot: values.deliverySlot as DeliverySlot,
     },
     cardMessage: values.cardMessage,
-    items: cart.lines.map((l) => ({ name: l.product.name, quantity: l.quantity, lineTotal: l.lineTotal })),
+    items: cart.lines.map((l) => ({ name: withOptions(l.product.name, l.options), quantity: l.quantity, lineTotal: l.lineTotal })),
     subtotal: cart.subtotal,
     deliveryFee: cart.deliveryFee,
     total: cart.total,
@@ -177,7 +189,7 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
     deliverySlot: values.deliverySlot as DeliverySlot,
     phone: values.phone,
     items: cart.lines.map((l) => ({
-      name: l.product.name.slice(0, 80),
+      name: withOptions(l.product.name, l.options).slice(0, 120),
       quantity: l.quantity,
       lineTotal: l.lineTotal,
     })),

@@ -13,8 +13,16 @@ const productSchema = new Schema(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, default: "", trim: true },
     details: { type: [String], default: [] },
-    /** Whole pesos. */
+    /** "per_piece": the buyer picks how many flowers; price is per flower. */
+    pricing: { type: String, enum: ["fixed", "per_piece"], default: "fixed" },
+    /** Whole pesos, per item (fixed) or per flower (per_piece). */
     price: { type: Number, required: true, min: 0, validate: wholeNumber },
+    /** Fewest flowers in a per_piece bouquet. */
+    minPieces: { type: Number, default: 5, min: 1, validate: wholeNumber },
+    /** No stock limit (per_piece products are always made to order). */
+    madeToOrder: { type: Boolean, default: false },
+    /** Shared add-ons ticked for this product (add-ons set to "all products" apply anyway). */
+    addOnIds: { type: [{ type: Schema.Types.ObjectId, ref: "AddOn" }], default: [] },
     compareAtPrice: {
       type: Number,
       min: 0,

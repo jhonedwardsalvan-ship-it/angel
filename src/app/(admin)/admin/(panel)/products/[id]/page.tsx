@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductForm } from "@/components/admin/product-form";
-import { getProduct, listCategories } from "@/lib/admin/queries";
+import { getProduct, listAddOns, listCategories } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/session";
 
 export const metadata = { title: "Edit product" };
@@ -11,7 +11,7 @@ export const metadata = { title: "Edit product" };
 export default async function EditProductPage({ params }: PageProps<"/admin/products/[id]">) {
   const { id } = await params;
   await requireAdmin(`/admin/products/${id}`);
-  const [product, categories] = await Promise.all([getProduct(id), listCategories()]);
+  const [product, categories, addOns] = await Promise.all([getProduct(id), listCategories(), listAddOns()]);
   if (!product) notFound();
 
   return (
@@ -27,7 +27,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
           )
         }
       />
-      <ProductForm product={product} categories={categories.map((c) => ({ value: c.id, label: c.isActive ? c.name : `${c.name} (hidden)` }))} />
+      <ProductForm product={product} addOns={addOns} categories={categories.map((c) => ({ value: c.id, label: c.isActive ? c.name : `${c.name} (hidden)` }))} />
     </div>
   );
 }

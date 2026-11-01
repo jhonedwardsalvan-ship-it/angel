@@ -1,7 +1,6 @@
 // Pricing rules shared by the cart, checkout and confirmation pages.
 // The delivery fee and free-delivery minimum come from store settings (Admin → Settings).
-
-export const MAX_QUANTITY_PER_LINE = 10;
+// Item prices and options: src/lib/catalog/configure.ts.
 
 type DeliveryRules = { deliveryFee: number; freeDeliveryMin: number };
 

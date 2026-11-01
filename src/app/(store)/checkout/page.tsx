@@ -43,8 +43,8 @@ export default async function CheckoutPage() {
         <div className="order-1 lg:order-2 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
           <OrderSummary subtotal={cart.subtotal} deliveryFee={cart.deliveryFee} freeDeliveryMin={cart.freeDeliveryMin} total={cart.total}>
             <ul className="stack gap-4">
-              {cart.lines.map(({ product, quantity, lineTotal }) => (
-                <li key={product.id} className="grid grid-cols-[3.5rem_1fr_auto] items-center gap-3 text-sm">
+              {cart.lines.map(({ key, product, quantity, options, lineTotal }) => (
+                <li key={key} className="grid grid-cols-[3.5rem_1fr_auto] items-center gap-3 text-sm">
                   <div className="media relative">
                     <Image src={product.images[0].src} alt="" fill sizes="56px" />
                     <span className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-pill bg-ink-muted text-[11px] text-ink-inverse">
@@ -54,6 +54,7 @@ export default async function CheckoutPage() {
                   <span>
                     {product.name}
                     <span className="sr-only">, quantity {quantity}</span>
+                    {options.length > 0 && <span className="block text-xs text-ink-muted">{options.join(" · ")}</span>}
                   </span>
                   <span className="tabular-nums">{formatPrice(lineTotal)}</span>
                 </li>

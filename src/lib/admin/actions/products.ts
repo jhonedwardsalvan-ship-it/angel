@@ -9,15 +9,17 @@ import { SLUG_PATTERN, slugify } from "@/lib/slug";
 import { Category } from "@/models/category";
 import { Product } from "@/models/product";
 import type { AdminFormState } from "@/types/admin";
+import { MAX_PIECES } from "@/lib/catalog/configure";
+import { AddOn } from "@/models/add-on";
 import { checked, isAllowedImageUrl, isDuplicateKey, parseImageLines, text, wholeNumber } from "../form";
 
 export async function saveProductAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const session = await requireAdmin();
   const id = text(formData, "id", 24);
   const values = Object.fromEntries(
-    ["name", "slug", "category", "price", "compareAtPrice", "stock", "description", "details", "images"].map((k) => [k, text(formData, k, 4000)]),
+    ["name", "slug", "category", "price", "compareAtPrice", "stock", "description", "details", "images", "pricing", "minPieces"].map((k) => [k, text(formData, k, 4000)]),
   );
-  for (const k of ["isActive", "isFeatured", "isNewArrival"]) values[k] = checked(formData, k) ? "on" : "";
+  for (const k of ["isActive", "isFeatured", "isNewArrival", "madeToOrder"]) values[k] = checked(formData, k) ? "on" : "";
 
   const fieldErrors: Record<string, string> = {};
   const name = values.name.slice(0, 120);
@@ -35,6 +37,13 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
     fieldErrors.compareAtPrice = "Must be a whole number higher than the price, or empty.";
   }
   if (stock !== undefined && !(stock >= 0)) fieldErrors.stock = "Enter a whole number, 0 or more.";
+  const pricing: "fixed" | "per_piece" = values.pricing === "per_piece" ? "per_piece" : "fixed";
+  const minPieces = pricing === "per_piece" ? wholeNumber(formData, "minPieces") : 5;
+  if (pricing === "per_piece" && !(minPieces >= 1 && minPieces <= MAX_PIECES)) fieldErrors.minPieces = "Enter a whole number of flowers, 1 or more.";
+  // Ticked shared add-ons; unknown ids are ignored.
+  const tickedAddOns = formData.getAll("addOnIds").map(String).filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 50);
+  values.addOnIds = tickedAddOns.join(",");
+
   if (images.length === 0) fieldErrors.images = "Upload at least one photo.";
   else if (images.some((img) => !isAllowedImageUrl(img.src))) {
     fieldErrors.images = "One of the photos has an invalid link. Remove it and upload it again.";
@@ -51,7 +60,11 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
     name,
     slug,
     category: values.category,
+    pricing,
     price,
+    minPieces,
+    madeToOrder: pricing === "per_piece" || values.madeToOrder === "on",
+    addOnIds: tickedAddOns.length ? (await AddOn.find({ _id: { $in: tickedAddOns } }, { _id: 1 }).lean()).map((a) => a._id) : [],
     description: values.description,
     details,
     images,

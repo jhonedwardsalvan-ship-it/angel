@@ -1,13 +1,16 @@
 import "server-only";
 import { Types } from "mongoose";
+import { describeOptions } from "@/lib/catalog/configure";
 import { LOW_STOCK_THRESHOLD } from "@/lib/catalog/stock";
 import { connectDB } from "@/lib/db/mongoose";
+import { AddOn } from "@/models/add-on";
 import { Category } from "@/models/category";
 import type { OrderStatus } from "@/lib/orders/status";
 import { Order } from "@/models/order";
 import { Product, type ProductDoc } from "@/models/product";
 import { StockAdjustment } from "@/models/stock-adjustment";
 import type {
+  AdminAddOn,
   AdminCategory,
   AdminOrder,
   AdminOrderRow,
@@ -35,7 +38,7 @@ type OrderRow = {
   cardMessage?: string;
   tracking?: { courier?: string; url?: string };
   payment: { method: string; status: string };
-  items: { product: Id; slug: string; name: string; image?: string; unitPrice: number; quantity: number; lineTotal: number }[];
+  items: { product: Id; slug: string; name: string; image?: string; unitPrice: number; quantity: number; lineTotal: number; breakdown?: { label: string; amount: number }[] }[];
   subtotal: number;
   deliveryFee: number;
   total: number;
@@ -87,6 +90,10 @@ export async function getProduct(id: string): Promise<AdminProduct | null> {
   if (!p) return null;
   return {
     ...toProductRow(p),
+    pricing: p.pricing === "per_piece" ? "per_piece" : "fixed",
+    minPieces: p.minPieces ?? 5,
+    madeToOrder: p.madeToOrder ?? false,
+    addOnIds: (p.addOnIds ?? []).map(String),
     description: p.description ?? "",
     details: [...p.details],
     images: p.images.map(({ src, alt }) => ({ src, alt })),
@@ -170,6 +177,7 @@ export async function getOrder(id: string): Promise<AdminOrder | null> {
       unitPrice: i.unitPrice,
       quantity: i.quantity,
       lineTotal: i.lineTotal,
+      options: describeOptions(i.breakdown ?? []),
     })),
     subtotal: o.subtotal,
     deliveryFee: o.deliveryFee,
@@ -235,4 +243,21 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     orders30d: revenue[0]?.n ?? 0,
     revenue30d: revenue[0]?.sum ?? 0,
   };
+}
+
+export async function listAddOns(): Promise<AdminAddOn[]> {
+  await connectDB();
+  const [rows, counts] = await Promise.all([
+    AddOn.find().sort({ isActive: -1, name: 1, _id: 1 }).lean(),
+    Product.aggregate<{ _id: Id; n: number }>([{ $unwind: "$addOnIds" }, { $group: { _id: "$addOnIds", n: { $sum: 1 } } }]),
+  ]);
+  const countById = new Map(counts.map((c) => [c._id.toString(), c.n]));
+  return rows.map((a) => ({
+    id: a._id.toString(),
+    name: a.name,
+    price: a.price,
+    appliesTo: a.appliesTo === "all" ? "all" : "selected",
+    isActive: a.isActive,
+    productCount: countById.get(a._id.toString()) ?? 0,
+  }));
 }

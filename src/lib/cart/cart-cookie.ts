@@ -1,15 +1,24 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { MAX_QUANTITY_PER_LINE } from "./pricing";
+import { MAX_QUANTITY, type LineConfig } from "@/lib/catalog/configure";
 
-// Temporary cart storage: a cookie holding only product ids and quantities.
-// Prices, names and stock are always re-read from the database.
+// Temporary cart storage: a cookie holding product ids, quantities and the
+// buyer's options. Prices, names and stock are always re-read from the database.
 
-export type CartEntry = { productId: string; quantity: number };
+export type CartEntry = { productId: string; quantity: number } & LineConfig;
 
 const COOKIE = "angel_cart";
 const MAX_LINES = 30;
 const OBJECT_ID = /^[a-f0-9]{24}$/;
+const ADD_ON_ID = OBJECT_ID;
+
+function parseAddOns(value: unknown): LineConfig["addOns"] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((a) => typeof a?.id === "string" && ADD_ON_ID.test(a.id) && Number.isInteger(a.qty) && a.qty > 0)
+    .map((a) => ({ id: a.id as string, qty: a.qty as number }))
+    .slice(0, 10);
+}
 
 /** Reads the cart cookie, dropping anything malformed. */
 export async function readCart(): Promise<CartEntry[]> {
@@ -19,14 +28,13 @@ export async function readCart(): Promise<CartEntry[]> {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter(
-        (e): e is CartEntry =>
-          typeof e?.productId === "string" &&
-          OBJECT_ID.test(e.productId) &&
-          Number.isInteger(e.quantity) &&
-          e.quantity > 0,
-      )
-      .map((e) => ({ productId: e.productId, quantity: Math.min(e.quantity, MAX_QUANTITY_PER_LINE) }))
+      .filter((e) => typeof e?.productId === "string" && OBJECT_ID.test(e.productId) && Number.isInteger(e.quantity) && e.quantity > 0)
+      .map((e) => ({
+        productId: e.productId as string,
+        quantity: Math.min(e.quantity as number, MAX_QUANTITY),
+        pieces: Number.isInteger(e.pieces) && e.pieces > 0 ? (e.pieces as number) : undefined,
+        addOns: parseAddOns(e.addOns),
+      }))
       .slice(0, MAX_LINES);
   } catch {
     return [];
