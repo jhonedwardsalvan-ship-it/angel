@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { footerNav } from "@/lib/navigation";
+import { getCategories } from "@/lib/catalog/queries";
+import { footerNavFor } from "@/lib/navigation";
 import { SITE } from "@/lib/site";
 import { LogoBadge } from "./logo";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const footerNav = footerNavFor(await getCategories());
   return (
     <footer className="bg-inverse text-ink-inverse">
       <div className="container-page grid grid-cols-2 gap-x-6 gap-y-12 py-16 md:grid-cols-3 lg:grid-cols-[1.4fr_repeat(3,1fr)] lg:py-20">

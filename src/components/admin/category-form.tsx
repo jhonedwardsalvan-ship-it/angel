@@ -21,6 +21,7 @@ export function CategoryForm({ category }: { category?: AdminCategory }) {
         imageAlt: category.image.alt,
         sortOrder: String(category.sortOrder),
         isActive: category.isActive ? "on" : "",
+        showInMenu: category.showInMenu ? "on" : "",
       }
     : { isActive: "on", sortOrder: "0" };
   const v = (k: string) => state?.values?.[k] ?? initial[k] ?? "";
@@ -38,6 +39,7 @@ export function CategoryForm({ category }: { category?: AdminCategory }) {
         <FormField label="Sort order" name="sortOrder" inputMode="numeric" defaultValue={v("sortOrder")} error={e("sortOrder")} hint="Lower shows first." className="input max-w-32" />
         <CategoryImage initial={v("imageSrc")} error={e("imageSrc")} altFieldId="field-imageAlt" />
         <FormField label="Photo description" name="imageAlt" defaultValue={v("imageAlt")} error={e("imageAlt")} hint="A few words describing the photo, for screen readers." />
+        <CheckboxField label="Show in the main menu" name="showInMenu" defaultChecked={v("showInMenu") === "on"} hint="Adds this category to the store's top menu, after New Arrivals. Menu order follows Sort order." />
         <CheckboxField label="Live in the store" name="isActive" defaultChecked={v("isActive") === "on"} hint="Hiding a category also hides all of its products from the store." />
       </div>
 

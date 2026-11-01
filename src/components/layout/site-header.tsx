@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { BagIcon, SearchIcon, UserIcon } from "@/components/icons";
 import { getCart } from "@/lib/cart/get-cart";
-import { mainNav } from "@/lib/navigation";
+import { getMenuCategories } from "@/lib/catalog/queries";
+import { mainNavFor } from "@/lib/navigation";
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 
 export async function SiteHeader() {
-  const { itemCount } = await getCart();
+  const [{ itemCount }, menuCategories] = await Promise.all([getCart(), getMenuCategories()]);
+  const mainNav = mainNavFor(menuCategories);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur">

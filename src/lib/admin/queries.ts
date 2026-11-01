@@ -108,6 +108,7 @@ export async function listCategories(): Promise<AdminCategory[]> {
     image: { src: c.image.src, alt: c.image.alt },
     sortOrder: c.sortOrder,
     isActive: c.isActive,
+    showInMenu: c.showInMenu ?? false,
     productCount: countById.get(c._id.toString()) ?? 0,
   }));
 }

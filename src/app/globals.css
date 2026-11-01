@@ -793,3 +793,20 @@
     --section-y: 6rem;
   }
 }
+
+/* "Flowering soon" page (src/app/not-found.tsx). Reduced-motion users get the
+   static version via the base layer's prefers-reduced-motion rule. */
+@theme {
+  --animate-bloom: bloom 3.2s ease-in-out infinite;
+  --animate-dot: dot 1.4s ease-in-out infinite;
+
+  @keyframes bloom {
+    0%, 100% { transform: scale(0.9) rotate(0deg); }
+    50% { transform: scale(1.05) rotate(14deg); }
+  }
+
+  @keyframes dot {
+    0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
+    40% { opacity: 1; transform: translateY(-0.2em); }
+  }
+}

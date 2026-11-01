@@ -16,6 +16,7 @@ export async function saveCategoryAction(_prev: AdminFormState, formData: FormDa
     ["name", "slug", "description", "imageSrc", "imageAlt", "sortOrder"].map((k) => [k, text(formData, k, 1000)]),
   );
   values.isActive = checked(formData, "isActive") ? "on" : "";
+  values.showInMenu = checked(formData, "showInMenu") ? "on" : "";
 
   const fieldErrors: Record<string, string> = {};
   const name = values.name.slice(0, 80);
@@ -37,6 +38,7 @@ export async function saveCategoryAction(_prev: AdminFormState, formData: FormDa
     image: { src: values.imageSrc, alt: values.imageAlt },
     sortOrder,
     isActive: values.isActive === "on",
+    showInMenu: values.showInMenu === "on",
   };
 
   await connectDB();

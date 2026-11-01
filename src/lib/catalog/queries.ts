@@ -70,6 +70,13 @@ export async function getCategories(): Promise<Category[]> {
   return rows.map(toCategory);
 }
 
+/** Live categories marked "Show in the main menu", in sort order. Cached per request. */
+export const getMenuCategories = cache(async (): Promise<Category[]> => {
+  await connectDB();
+  const rows = await CategoryModel.find({ ...ACTIVE, showInMenu: true }).sort({ sortOrder: 1, name: 1 }).lean<CategoryRow[]>();
+  return rows.map(toCategory);
+});
+
 /** Cached per request so generateMetadata and the page share one query. */
 export const getCategoryBySlug = cache(async (slug: string): Promise<Category | null> => {
   await connectDB();

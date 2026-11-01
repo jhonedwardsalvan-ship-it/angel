@@ -19,6 +19,8 @@ const categorySchema = new Schema(
     image: { type: imageSchema, required: true },
     sortOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    /** Listed in the store's top menu after "New Arrivals", in sortOrder. */
+    showInMenu: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

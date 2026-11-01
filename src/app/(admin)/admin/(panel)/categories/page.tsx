@@ -48,7 +48,7 @@ export default async function AdminCategoriesPage({ searchParams }: PageProps<"/
                 </td>
                 <td className="num">{c.productCount}</td>
                 <td className="num">{c.sortOrder}</td>
-                <td><span className={`badge ${c.isActive ? "badge-success" : "badge-neutral"}`}>{c.isActive ? "Live" : "Hidden"}</span></td>
+                <td><span className={`badge ${c.isActive ? "badge-success" : "badge-neutral"}`}>{c.isActive ? "Live" : "Hidden"}</span>{c.showInMenu && c.isActive && <span className="badge badge-info ml-2">In menu</span>}</td>
                 <td>
                   <div className="flex items-center justify-end gap-3 whitespace-nowrap">
                     <Link href={`/admin/categories/${c.id}`} className="link">Edit</Link>

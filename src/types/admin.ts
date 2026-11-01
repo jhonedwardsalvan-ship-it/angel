@@ -39,6 +39,7 @@ export type AdminCategory = {
   image: CatalogImage;
   sortOrder: number;
   isActive: boolean;
+  showInMenu: boolean;
   productCount: number;
 };
 
