@@ -44,6 +44,8 @@ const orderSchema = new Schema(
       slot: { type: String, enum: ["morning", "afternoon", "evening"], required: true },
     },
     cardMessage: { type: String, default: "" },
+    /** Buyer's notes for the team (not printed on the card). */
+    notes: { type: String, default: "" },
     /** Set by an admin when the order goes out for delivery. */
     tracking: {
       courier: { type: String, default: "" },

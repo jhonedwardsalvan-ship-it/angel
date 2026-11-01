@@ -16,6 +16,7 @@ type BuyerOrderRow = {
   customer: { name: string; phone: string };
   delivery: { recipientName: string; address: string; city: string; date: string; slot: string };
   cardMessage?: string;
+  notes?: string;
   tracking?: { courier?: string; url?: string };
   payment: { method: string; status: string };
   items: { slug: string; name: string; image?: string; unitPrice: number; quantity: number; lineTotal: number; breakdown?: { label: string; amount: number }[] }[];
@@ -38,6 +39,7 @@ export type BuyerOrder = {
   deliveryDate: string;
   deliverySlot: string;
   cardMessage: string;
+  notes: string;
   /** Courier label and live tracking link, once the order is out for delivery. */
   tracking: { courier: string; url: string };
   items: { slug: string; name: string; image: string; unitPrice: number; quantity: number; lineTotal: number; options: string[] }[];
@@ -73,6 +75,7 @@ function toBuyerOrder(o: BuyerOrderRow): BuyerOrder {
     deliveryDate: o.delivery.date,
     deliverySlot: o.delivery.slot,
     cardMessage: o.cardMessage ?? "",
+    notes: o.notes ?? "",
     tracking: { courier: courierLabel(o.tracking?.courier ?? ""), url: o.tracking?.url ?? "" },
     items: o.items.map((i) => ({
       slug: i.slug,

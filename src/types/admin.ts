@@ -70,6 +70,7 @@ export type AdminOrder = AdminOrderRow & {
   customerPhone: string;
   delivery: { recipientName: string; address: string; city: string; date: string; slot: string };
   cardMessage: string;
+  notes: string;
   tracking: { courier: string; url: string };
   items: {
     productId: string;

@@ -92,6 +92,27 @@ export function CheckoutForm({ total, minDate, maxDate, leadDays, defaults }: Ch
             <p id="field-cardMessage-hint" className="text-xs text-ink-muted">Handwritten and tucked into the wrap. Up to 200 characters.</p>
           )}
         </div>
+        <div className="stack gap-2">
+          <label htmlFor="field-notes" className="text-sm">
+            Notes <span className="text-ink-muted">(optional)</span>
+          </label>
+          <textarea
+            id="field-notes"
+            name="notes"
+            rows={4}
+            maxLength={5000}
+            className="input resize-y"
+            placeholder="e.g. Add a name tag, mix pink and white flowers, or use a bigger wrapper"
+            defaultValue={v("notes")}
+            aria-invalid={e("notes") ? true : undefined}
+            aria-describedby="field-notes-hint"
+          />
+          {e("notes") ? (
+            <ErrorText id="field-notes-hint" message={e("notes")} />
+          ) : (
+            <p id="field-notes-hint" className="text-xs text-ink-muted">Tell us how you&apos;d like your order customized. Our team will contact you to go over the details.</p>
+          )}
+        </div>
       </Fieldset>
 
       <section aria-labelledby="payment-title" className="stack gap-4">

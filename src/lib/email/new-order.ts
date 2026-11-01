@@ -10,6 +10,7 @@ export type NewOrderEmail = {
   customer: { name: string; email: string; phone: string };
   delivery: { recipientName: string; address: string; city: string; date: string; slot: keyof typeof DELIVERY_SLOTS };
   cardMessage: string;
+  notes: string;
   items: { name: string; quantity: number; lineTotal: number }[];
   subtotal: number;
   deliveryFee: number;
@@ -36,6 +37,7 @@ export async function sendNewOrderEmail(order: NewOrderEmail) {
     ["Address", `${delivery.address}, ${delivery.city}`],
     ["Delivery", when],
     ...(order.cardMessage ? [["Card message", order.cardMessage] as [string, string]] : []),
+    ...(order.notes ? [["Notes", order.notes] as [string, string]] : []),
   ];
   const totals: [string, string][] = [
     ["Subtotal", formatPrice(order.subtotal)],

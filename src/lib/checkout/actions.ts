@@ -19,7 +19,7 @@ import { writeLastOrder, type DeliverySlot } from "./last-order";
 
 export type CheckoutField =
   | "email" | "name" | "phone" | "recipientName" | "address" | "city"
-  | "deliveryDate" | "deliverySlot" | "cardMessage" | "agreeTerms";
+  | "deliveryDate" | "deliverySlot" | "cardMessage" | "notes" | "agreeTerms";
 
 export type CheckoutState =
   | {
@@ -53,7 +53,7 @@ function isDuplicateKey(error: unknown) {
 export async function placeOrderAction(_prev: CheckoutState, formData: FormData): Promise<CheckoutState> {
   const fields = [
     "email", "name", "phone", "recipientName", "address", "city",
-    "deliveryDate", "deliverySlot", "cardMessage", "agreeTerms",
+    "deliveryDate", "deliverySlot", "cardMessage", "notes", "agreeTerms",
   ] as const;
   const values = Object.fromEntries(
     fields.map((f) => [f, String(formData.get(f) ?? "").trim()]),
@@ -76,6 +76,8 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
   }
   if (!(values.deliverySlot in DELIVERY_SLOTS)) fieldErrors.deliverySlot = "Choose a delivery time.";
   if (values.cardMessage.length > 200) fieldErrors.cardMessage = "Keep the message under 200 characters.";
+  // Generous cap only to stop junk submissions; buyers aren't told about a limit.
+  if (values.notes.length > 5000) fieldErrors.notes = "That's a very long note. Please shorten it, and we'll go over the rest when we contact you.";
   if (values.agreeTerms !== "on") fieldErrors.agreeTerms = "Please agree to the terms to place your order.";
   if (Object.keys(fieldErrors).length) return { fieldErrors, values };
 
@@ -123,6 +125,7 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
             slot: values.deliverySlot as DeliverySlot,
           },
           cardMessage: values.cardMessage,
+          notes: values.notes,
           payment: { method: "arranged", status: "unpaid" },
           items: cart.lines.map((l) => ({
             product: l.product.id,
@@ -170,6 +173,7 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
       slot: values.deliverySlot as DeliverySlot,
     },
     cardMessage: values.cardMessage,
+    notes: values.notes,
     items: cart.lines.map((l) => ({ name: withOptions(l.product.name, l.options), quantity: l.quantity, lineTotal: l.lineTotal })),
     subtotal: cart.subtotal,
     deliveryFee: cart.deliveryFee,

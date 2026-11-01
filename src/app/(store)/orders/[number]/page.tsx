@@ -148,6 +148,12 @@ export default async function OrderPage({ params }: PageProps<"/orders/[number]"
                 <dd className="whitespace-pre-line">{order.cardMessage}</dd>
               </div>
             )}
+            {order.notes && (
+              <div className="stack gap-1">
+                <dt className="eyebrow">Notes</dt>
+                <dd className="whitespace-pre-line">{order.notes}</dd>
+              </div>
+            )}
           </dl>
         </section>
 

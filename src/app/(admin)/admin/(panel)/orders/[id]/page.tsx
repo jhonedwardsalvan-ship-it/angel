@@ -104,6 +104,7 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
               <div className="stack gap-1"><dt className="eyebrow">Delivery</dt><dd>{order.delivery.date}<br />{DELIVERY_SLOTS[order.delivery.slot as keyof typeof DELIVERY_SLOTS] ?? order.delivery.slot}</dd></div>
               <div className="stack gap-1"><dt className="eyebrow">Payment</dt><dd>{PAYMENT_METHODS[order.paymentMethod]}<br /><span className="text-ink-muted">{order.paymentStatus === "demo" ? "Demo, nothing charged" : order.paymentStatus === "paid" ? "Paid" : order.paymentMethod === "cod" ? "Collect on delivery" : "Awaiting payment. Contact the buyer to arrange it."}</span></dd></div>
               <div className="stack gap-1"><dt className="eyebrow">Message card</dt><dd className="whitespace-pre-line">{order.cardMessage || <span className="text-ink-muted">None</span>}</dd></div>
+              <div className="stack gap-1 sm:col-span-2"><dt className="eyebrow">Notes</dt><dd className="whitespace-pre-line">{order.notes || <span className="text-ink-muted">None</span>}</dd></div>
             </dl>
           </section>
         </div>

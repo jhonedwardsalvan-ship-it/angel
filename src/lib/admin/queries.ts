@@ -38,6 +38,7 @@ type OrderRow = {
   customer: { name: string; email: string; phone: string };
   delivery: { recipientName: string; address: string; city: string; date: string; slot: string };
   cardMessage?: string;
+  notes?: string;
   tracking?: { courier?: string; url?: string };
   payment: { method: string; status: string };
   items: { product: Id; slug: string; name: string; image?: string; unitPrice: number; quantity: number; lineTotal: number; breakdown?: { label: string; amount: number }[] }[];
@@ -172,6 +173,7 @@ export async function getOrder(id: string): Promise<AdminOrder | null> {
     customerPhone: o.customer.phone,
     delivery: { ...o.delivery },
     cardMessage: o.cardMessage ?? "",
+    notes: o.notes ?? "",
     tracking: { courier: o.tracking?.courier ?? "", url: o.tracking?.url ?? "" },
     items: o.items.map((i) => ({
       productId: i.product.toString(),
