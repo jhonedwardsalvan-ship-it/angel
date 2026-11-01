@@ -13,6 +13,9 @@ const bodyFont = DM_Sans({
 export const metadata: Metadata = {
   title: "AL Flower Shop",
   description: "Handcrafted flowers and gifts that last, from AL Flower Shop",
+  other: {
+    "google-adsense-account": "ca-pub-9341622931460129",
+  },
 };
 
 export const viewport: Viewport = {
