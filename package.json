@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "admin:grant": "node --env-file-if-exists=.env.local scripts/admin-grant.mjs"
   },
   "dependencies": {
     "better-auth": "^1.7.7",
