@@ -35,9 +35,11 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
     fieldErrors.compareAtPrice = "Must be a whole number higher than the price, or empty.";
   }
   if (stock !== undefined && !(stock >= 0)) fieldErrors.stock = "Enter a whole number, 0 or more.";
-  if (images.length === 0) fieldErrors.images = "Add at least one image.";
-  else if (images.some((img) => !isAllowedImageUrl(img.src) || !img.alt)) {
-    fieldErrors.images = "Each line needs an https://images.unsplash.com/… URL, then | and alt text.";
+  if (images.length === 0) fieldErrors.images = "Upload at least one photo.";
+  else if (images.some((img) => !isAllowedImageUrl(img.src))) {
+    fieldErrors.images = "One of the photos has an invalid link. Remove it and upload it again.";
+  } else if (images.some((img) => !img.alt)) {
+    fieldErrors.images = "Add a short description under every photo.";
   }
 
   await connectDB();

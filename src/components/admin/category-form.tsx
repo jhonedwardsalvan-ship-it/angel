@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { CategoryImage } from "@/components/admin/category-image";
 import { CheckboxField } from "@/components/forms/checkbox-field";
 import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
@@ -34,11 +35,9 @@ export function CategoryForm({ category }: { category?: AdminCategory }) {
         <FormField label="Name" name="name" required defaultValue={v("name")} error={e("name")} />
         <FormField label="Slug" name="slug" defaultValue={v("slug")} error={e("slug")} hint="Used in /collections/<slug>. Leave empty to generate it from the name." />
         <TextareaField label="Description" name="description" rows={2} maxLength={300} defaultValue={v("description")} error={e("description")} hint="One short line shown under the name." />
-        <div className="grid gap-5 sm:grid-cols-[1fr_8rem]">
-          <FormField label="Image URL" name="imageSrc" type="url" defaultValue={v("imageSrc")} error={e("imageSrc")} hint="https://images.unsplash.com/… only, for now." />
-          <FormField label="Sort order" name="sortOrder" inputMode="numeric" defaultValue={v("sortOrder")} error={e("sortOrder")} hint="Lower shows first." />
-        </div>
-        <FormField label="Image alt text" name="imageAlt" defaultValue={v("imageAlt")} error={e("imageAlt")} />
+        <FormField label="Sort order" name="sortOrder" inputMode="numeric" defaultValue={v("sortOrder")} error={e("sortOrder")} hint="Lower shows first." className="input max-w-32" />
+        <CategoryImage initial={v("imageSrc")} error={e("imageSrc")} altFieldId="field-imageAlt" />
+        <FormField label="Photo description" name="imageAlt" defaultValue={v("imageAlt")} error={e("imageAlt")} hint="A few words describing the photo, for screen readers." />
         <CheckboxField label="Live in the store" name="isActive" defaultChecked={v("isActive") === "on"} hint="Hiding a category also hides all of its products from the store." />
       </div>
 

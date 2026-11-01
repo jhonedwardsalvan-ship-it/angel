@@ -17,13 +17,13 @@ export function wholeNumber(formData: FormData, key: string) {
   return Number.isInteger(n) ? n : NaN;
 }
 
-/** Image hosts next/image is configured for (next.config.ts remotePatterns). */
-export const ALLOWED_IMAGE_HOSTS = ["images.unsplash.com"];
+/** Where product and category photos live: Cloudinary uploads, plus the original Unsplash photos. Keep in sync with next.config.ts. */
+export const IMAGE_HOSTS = ["res.cloudinary.com", "images.unsplash.com"];
 
 export function isAllowedImageUrl(value: string) {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && ALLOWED_IMAGE_HOSTS.includes(url.hostname);
+    return url.protocol === "https:" && IMAGE_HOSTS.includes(url.hostname);
   } catch {
     return false;
   }

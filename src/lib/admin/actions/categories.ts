@@ -25,8 +25,9 @@ export async function saveCategoryAction(_prev: AdminFormState, formData: FormDa
   if (!SLUG_PATTERN.test(slug)) fieldErrors.slug = "Use lowercase letters, numbers and hyphens.";
   if (slug === "new") fieldErrors.slug = "“new” is reserved for the New arrivals page.";
   if (!Number.isFinite(sortOrder)) fieldErrors.sortOrder = "Enter a whole number.";
-  if (!isAllowedImageUrl(values.imageSrc)) fieldErrors.imageSrc = "Use an https://images.unsplash.com/… URL.";
-  if (!values.imageAlt) fieldErrors.imageAlt = "Describe the image.";
+  if (!values.imageSrc) fieldErrors.imageSrc = "Upload a photo.";
+  else if (!isAllowedImageUrl(values.imageSrc)) fieldErrors.imageSrc = "This photo's link is invalid. Upload it again.";
+  if (!values.imageAlt) fieldErrors.imageAlt = "Describe the photo in a few words.";
   if (Object.keys(fieldErrors).length) return { fieldErrors, values };
 
   const data = {

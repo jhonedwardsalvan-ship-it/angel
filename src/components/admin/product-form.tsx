@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { ProductImages } from "@/components/admin/product-images";
 import { CheckboxField } from "@/components/forms/checkbox-field";
 import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
@@ -68,25 +69,7 @@ export function ProductForm({ product, categories }: ProductFormProps) {
 
       <div className="panel stack gap-5">
         <h2 className="text-h4">Images</h2>
-        <TextareaField
-          label="Image URLs"
-          name="images"
-          rows={4}
-          defaultValue={v("images")}
-          error={e("images")}
-          hint="One per line as “URL | alt text”. The first image is shown on cards. Only images.unsplash.com is allowed for now."
-          className="input resize-y font-mono text-xs"
-        />
-        {product && product.images.length > 0 && (
-          <ul className="flex flex-wrap gap-2" aria-label="Current images">
-            {product.images.map((img) => (
-              <li key={img.src} className="media size-20">
-                {/* eslint-disable-next-line @next/next/no-img-element -- small admin preview */}
-                <img src={img.src} alt={img.alt} className="absolute inset-0 size-full object-cover" />
-              </li>
-            ))}
-          </ul>
-        )}
+        <ProductImages initial={v("images")} error={e("images")} productNameFieldId="field-name" />
       </div>
 
       <div className="panel stack gap-4">

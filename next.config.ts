@@ -4,7 +4,11 @@ const nextConfig: NextConfig = {
   // Allow opening the dev server from other devices on the LAN
   allowedDevOrigins: ["192.168.1.12"],
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
+    // Cloudinary uploads and the original Unsplash photos (see IMAGE_HOSTS in src/lib/admin/form.ts).
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
   },
 };
 
