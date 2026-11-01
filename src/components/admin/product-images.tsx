@@ -12,10 +12,13 @@ type Img = { src: string; alt: string };
  */
 export function ProductImages({ initial, error, productNameFieldId }: { initial: string; error?: string; productNameFieldId: string }) {
   const [images, setImages] = useState<Img[]>(() => parseImageLines(initial));
+  // Uploaded during this edit; on save, any that were removed again are deleted from Cloudinary.
+  const [uploaded, setUploaded] = useState<string[]>([]);
 
   function add(url: string, file: File) {
     const name = (document.getElementById(productNameFieldId) as HTMLInputElement | null)?.value.trim();
     setImages((list) => [...list, { src: url, alt: name || altFromFileName(file.name) }]);
+    setUploaded((list) => [...list, url]);
   }
   const remove = (i: number) => setImages((list) => list.filter((_, j) => j !== i));
   const makeCover = (i: number) => setImages((list) => [list[i], ...list.filter((_, j) => j !== i)]);
@@ -24,6 +27,7 @@ export function ProductImages({ initial, error, productNameFieldId }: { initial:
   return (
     <div className="stack gap-4">
       <input type="hidden" name="images" value={images.map((img) => `${img.src} | ${img.alt}`).join("\n")} />
+      <input type="hidden" name="uploadedImages" value={uploaded.join("\n")} />
 
       {images.length === 0 ? (
         <p className="rounded-control border border-dashed border-line-strong px-4 py-6 text-center text-sm text-ink-muted">

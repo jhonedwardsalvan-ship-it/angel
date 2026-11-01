@@ -1,13 +1,15 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { requireAdmin } from "@/lib/session";
 import { SLUG_PATTERN, slugify } from "@/lib/slug";
 import { Category } from "@/models/category";
 import { Product } from "@/models/product";
 import type { AdminFormState } from "@/types/admin";
-import { checked, isAllowedImageUrl, isDuplicateKey, text, wholeNumber } from "../form";
+import { deleteUnusedImages } from "../cloudinary";
+import { checked, isAllowedImageUrl, isDuplicateKey, text, uploadedThisEdit, wholeNumber } from "../form";
 
 export async function saveCategoryAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   await requireAdmin();
@@ -41,11 +43,16 @@ export async function saveCategoryAction(_prev: AdminFormState, formData: FormDa
     showInMenu: values.showInMenu === "on",
   };
 
+  // Photos to drop from Cloudinary once saved: the replaced photo, plus ones
+  // uploaded during this edit and replaced again before saving.
+  const dropped = uploadedThisEdit(formData).filter((src) => src !== values.imageSrc);
+
   await connectDB();
   try {
     if (id) {
       const doc = await Category.findById(id);
       if (!doc) return { error: "This category no longer exists.", values };
+      if (doc.image.src !== values.imageSrc) dropped.push(doc.image.src);
       doc.set(data);
       await doc.save();
     } else {
@@ -56,6 +63,7 @@ export async function saveCategoryAction(_prev: AdminFormState, formData: FormDa
     throw error;
   }
 
+  if (dropped.length) after(() => deleteUnusedImages(dropped));
   redirect(`/admin/categories?notice=${encodeURIComponent(`Saved “${name}”.`)}`);
 }
 
@@ -69,5 +77,6 @@ export async function deleteCategoryAction(formData: FormData) {
     redirect(`/admin/categories?error=${encodeURIComponent(`Move or delete its ${inUse} product(s) first.`)}`);
   }
   const deleted = await Category.findByIdAndDelete(id);
+  if (deleted) after(() => deleteUnusedImages([deleted.image.src]));
   redirect(`/admin/categories?notice=${encodeURIComponent(deleted ? `Deleted “${deleted.name}”.` : "Category already deleted.")}`);
 }

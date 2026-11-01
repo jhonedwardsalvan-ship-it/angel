@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { setStock } from "@/lib/inventory";
 import { requireAdmin } from "@/lib/session";
@@ -11,7 +12,8 @@ import { Product } from "@/models/product";
 import type { AdminFormState } from "@/types/admin";
 import { MAX_PIECES } from "@/lib/catalog/configure";
 import { AddOn } from "@/models/add-on";
-import { checked, isAllowedImageUrl, isDuplicateKey, parseImageLines, text, wholeNumber } from "../form";
+import { deleteUnusedImages } from "../cloudinary";
+import { checked, isAllowedImageUrl, isDuplicateKey, parseImageLines, text, uploadedThisEdit, wholeNumber } from "../form";
 
 export async function saveProductAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const session = await requireAdmin();
@@ -73,11 +75,17 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
     isNewArrival: values.isNewArrival === "on",
   };
 
+  // Photos to drop from Cloudinary once saved: ones removed from this product,
+  // plus ones uploaded during this edit and removed again before saving.
+  const kept = new Set(images.map((img) => img.src));
+  const dropped = uploadedThisEdit(formData).filter((src) => !kept.has(src));
+
   let savedId = id;
   try {
     if (id) {
       const doc = await Product.findById(id);
       if (!doc) return { error: "This product no longer exists.", values };
+      dropped.push(...doc.images.map((img) => img.src).filter((src) => !kept.has(src)));
       doc.set(data);
       // Clearing the sale price must remove the field, not leave the old one.
       doc.set("compareAtPrice", compareAtPrice);
@@ -92,6 +100,7 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
     throw error;
   }
 
+  if (dropped.length) after(() => deleteUnusedImages(dropped));
   redirect(`/admin/products?notice=${encodeURIComponent(`Saved “${name}”.`)}`);
 }
 

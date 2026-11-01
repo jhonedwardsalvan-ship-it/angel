@@ -6,9 +6,12 @@ import { altFromFileName, ImageUpload } from "./image-upload";
 /** Single category photo: upload, replace or remove. Submits as a hidden "imageSrc" field. */
 export function CategoryImage({ initial, error, altFieldId }: { initial: string; error?: string; altFieldId: string }) {
   const [src, setSrc] = useState(initial);
+  // Uploaded during this edit; on save, any that were replaced again are deleted from Cloudinary.
+  const [uploaded, setUploaded] = useState<string[]>([]);
 
   function onUploaded(url: string, file: File) {
     setSrc(url);
+    setUploaded((list) => [...list, url]);
     // Fill the description from the file name if it's still empty.
     const alt = document.getElementById(altFieldId) as HTMLInputElement | null;
     if (alt && !alt.value.trim()) {
@@ -21,6 +24,7 @@ export function CategoryImage({ initial, error, altFieldId }: { initial: string;
     <div className="stack gap-3">
       <span className="text-sm">Photo</span>
       <input type="hidden" name="imageSrc" value={src} />
+      <input type="hidden" name="uploadedImages" value={uploaded.join("\n")} />
       {src ? (
         <div className="media relative aspect-[4/3] w-full max-w-xs">
           {/* eslint-disable-next-line @next/next/no-img-element -- admin preview of any host */}

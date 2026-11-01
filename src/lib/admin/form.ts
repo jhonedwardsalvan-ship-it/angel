@@ -47,3 +47,8 @@ export function isDuplicateKey(error: unknown) {
 
 /** Highlight rows on the settings page. */
 export const MAX_HIGHLIGHTS = 4;
+
+/** Photo links the form uploaded during this edit (hidden "uploadedImages" field, one per line). */
+export function uploadedThisEdit(formData: FormData) {
+  return text(formData, "uploadedImages", 20000).split("\n").map((s) => s.trim()).filter(isAllowedImageUrl).slice(0, 50);
+}
