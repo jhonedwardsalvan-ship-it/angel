@@ -11,6 +11,7 @@ import { sendNewOrderEmail } from "@/lib/email/new-order";
 import { hasStockLimit } from "@/lib/catalog/configure";
 import { releaseStock, reserveStock } from "@/lib/inventory";
 import { allowTrackedOrder } from "@/lib/orders/tracking";
+import { rateLimit } from "@/lib/rate-limit";
 import { getSession } from "@/lib/session";
 import { getStoreSettings } from "@/lib/settings";
 import { Order } from "@/models/order";
@@ -80,6 +81,11 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
   if (values.notes.length > 5000) fieldErrors.notes = "That's a very long note. Please shorten it, and we'll go over the rest when we contact you.";
   if (values.agreeTerms !== "on") fieldErrors.agreeTerms = "Please agree to the terms to place your order.";
   if (Object.keys(fieldErrors).length) return { fieldErrors, values };
+
+  // Stops scripted fake orders from tying up stock and flooding the order inbox.
+  if (!(await rateLimit("placeOrder"))) {
+    return { error: "Too many orders from your network. Please wait a while or contact us to order.", values };
+  }
 
   // Re-check the cart against live prices and stock right before ordering.
   const cart = await getCart();

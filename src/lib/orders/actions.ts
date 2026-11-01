@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { rateLimit } from "@/lib/rate-limit";
 import { matchGuestOrder, normalizeOrderNumber } from "./queries";
 import { allowTrackedOrder } from "./tracking";
 
@@ -15,6 +16,10 @@ export async function trackOrderAction(_prev: TrackOrderState, formData: FormDat
   const values = { number, phone };
 
   if (!number || !phone) return { error: "Enter your order number and phone number.", values };
+  // Without a limit, order numbers and phones could be guessed to read other buyers' addresses.
+  if (!(await rateLimit("trackOrder"))) {
+    return { error: "Too many lookups. Please wait a few minutes and try again.", values };
+  }
   if (!(await matchGuestOrder(number, phone))) {
     return { error: "We couldn't find an order with that number and phone. Check both and try again.", values };
   }

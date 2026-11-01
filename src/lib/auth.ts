@@ -36,6 +36,10 @@ export const auth = betterAuth({
       requireLocalEmailVerified: true,
     },
   },
+  // Limits direct requests to /api/auth (on by default in production). Stored in
+  // MongoDB so the count is shared by every server instance. Our own server
+  // actions are limited separately in src/lib/rate-limit.ts.
+  rateLimit: { storage: "database" },
   // Must be the last plugin: lets server actions set auth cookies.
   plugins: [nextCookies()],
 });

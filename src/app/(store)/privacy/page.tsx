@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <ProsePage title="Privacy policy" eyebrow="Privacy" updated="November 1, 2026">
+    <ProsePage title="Privacy policy" eyebrow="Privacy" updated="November 2, 2026">
       <p>
         {SITE.name} respects your privacy. This policy explains what personal information we collect, why we collect
         it and how we protect it, in line with the Data Privacy Act of 2012 (Republic Act No. 10173).
@@ -36,7 +36,10 @@ export default function PrivacyPage() {
           <li>To let you track your order and see your past orders.</li>
           <li>To keep records required for our business and the law.</li>
         </ul>
-        <p className="mt-3">We don&apos;t sell your information, and we don&apos;t use it for advertising without your consent.</p>
+        <p className="mt-3">
+          We don&apos;t sell your information, and we never share your order, delivery or account details with
+          advertisers.
+        </p>
       </section>
 
       <section>
@@ -51,7 +54,37 @@ export default function PrivacyPage() {
         <h2>Cookies</h2>
         <p>
           We use a few essential cookies to keep your cart, keep you signed in, show your order confirmation and remember
-          orders you&apos;ve looked up. We don&apos;t use advertising cookies.
+          orders you&apos;ve looked up.
+        </p>
+      </section>
+
+      <section>
+        <h2>Advertising</h2>
+        <p>
+          We use Google AdSense to show ads on this website. Google and its partners, as third-party vendors, use
+          cookies to serve ads based on your previous visits to this website and other websites. Google&apos;s use of
+          advertising cookies lets it and its partners show you ads based on your visits to our site and other sites
+          on the internet.
+        </p>
+        <p className="mt-3">
+          You can opt out of personalized advertising in{" "}
+          <a href="https://adssettings.google.com" className="link" target="_blank" rel="noopener noreferrer">
+            Google Ads Settings
+          </a>
+          , or opt out of some third-party vendors&apos; use of cookies for personalized ads at{" "}
+          <a href="https://www.aboutads.info/choices" className="link" target="_blank" rel="noopener noreferrer">
+            aboutads.info
+          </a>
+          . To learn more, see{" "}
+          <a
+            href="https://policies.google.com/technologies/partner-sites"
+            className="link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            how Google uses information from sites that use its services
+          </a>
+          .
         </p>
       </section>
 

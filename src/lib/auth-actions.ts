@@ -4,6 +4,7 @@ import { isAPIError } from "better-auth/api";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 import { safeNext } from "@/lib/safe-redirect";
 
 export type AuthField = "name" | "email" | "password";
@@ -44,6 +45,10 @@ export async function signInAction(_prev: AuthFormState, formData: FormData): Pr
   if (!password) fieldErrors.password = "Enter your password.";
   if (Object.keys(fieldErrors).length) return { fieldErrors, values };
 
+  // Per visitor and per account, so password guessing is slow from one IP or from many.
+  const allowed = (await rateLimit("signIn")) && (await rateLimit("signIn", `email:${email.toLowerCase()}`));
+  if (!allowed) return { error: "Too many attempts. Please wait a few minutes and try again.", values };
+
   try {
     await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
   } catch (error) {
@@ -69,6 +74,10 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
   if (password.length < MIN_PASSWORD) fieldErrors.password = `Use at least ${MIN_PASSWORD} characters.`;
   else if (password.length > MAX_PASSWORD) fieldErrors.password = `Use at most ${MAX_PASSWORD} characters.`;
   if (Object.keys(fieldErrors).length) return { fieldErrors, values };
+
+  if (!(await rateLimit("signUp"))) {
+    return { error: "Too many accounts created from your network. Please try again later.", values };
+  }
 
   try {
     // autoSignIn (Better Auth default) sets the session cookie on success.
