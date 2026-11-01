@@ -1,11 +1,11 @@
 import "server-only";
 import { cookies } from "next/headers";
 
-// Demo checkout keeps no orders in the database. The confirmation page reads
-// a short-lived summary of the last order from this cookie instead.
+// The confirmation page reads a short-lived summary of the last order from this
+// cookie, so it renders without a database lookup.
 
 export type DeliverySlot = "morning" | "afternoon" | "evening";
-export type PaymentMethod = "demo-card" | "cod";
+export type PaymentMethod = "arranged" | "demo-card" | "cod";
 
 export type OrderSummary = {
   number: string;
@@ -17,7 +17,8 @@ export type OrderSummary = {
   city: string;
   deliveryDate: string;
   deliverySlot: DeliverySlot;
-  paymentMethod: PaymentMethod;
+  /** Where the team will contact the buyer about payment. */
+  phone: string;
   items: { name: string; quantity: number; lineTotal: number }[];
   subtotal: number;
   deliveryFee: number;

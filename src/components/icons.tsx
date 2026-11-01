@@ -88,3 +88,11 @@ export const ShieldIcon = (p: IconProps) => (
     <path d="m9 12 2 2 4-4" />
   </Icon>
 );
+
+/** Icons admins can pick for store highlights (Admin → Settings). */
+export const highlightIcons = {
+  truck: TruckIcon,
+  card: CardIcon,
+  leaf: LeafIcon,
+  shield: ShieldIcon,
+};

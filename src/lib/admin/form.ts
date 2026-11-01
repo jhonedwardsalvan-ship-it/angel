@@ -44,3 +44,6 @@ export function parseImageLines(value: string) {
 export function isDuplicateKey(error: unknown) {
   return typeof error === "object" && error !== null && (error as { code?: number }).code === 11000;
 }
+
+/** Highlight rows on the settings page. */
+export const MAX_HIGHLIGHTS = 4;

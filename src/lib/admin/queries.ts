@@ -33,6 +33,7 @@ type OrderRow = {
   customer: { name: string; email: string; phone: string };
   delivery: { recipientName: string; address: string; city: string; date: string; slot: string };
   cardMessage?: string;
+  tracking?: { courier?: string; url?: string };
   payment: { method: string; status: string };
   items: { product: Id; slug: string; name: string; image?: string; unitPrice: number; quantity: number; lineTotal: number }[];
   subtotal: number;
@@ -127,6 +128,7 @@ function toOrderRow(o: OrderRow): AdminOrderRow {
     total: o.total,
     status: o.status as OrderStatus,
     paymentMethod: o.payment.method as AdminOrderRow["paymentMethod"],
+    paymentStatus: o.payment.status as AdminOrderRow["paymentStatus"],
     deliveryDate: o.delivery.date,
   };
 }
@@ -158,7 +160,7 @@ export async function getOrder(id: string): Promise<AdminOrder | null> {
     customerPhone: o.customer.phone,
     delivery: { ...o.delivery },
     cardMessage: o.cardMessage ?? "",
-    paymentStatus: o.payment.status as AdminOrder["paymentStatus"],
+    tracking: { courier: o.tracking?.courier ?? "", url: o.tracking?.url ?? "" },
     items: o.items.map((i) => ({
       productId: i.product.toString(),
       slug: i.slug,

@@ -52,6 +52,7 @@ export type AdminOrderRow = {
   total: number;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
+  paymentStatus: "unpaid" | "demo" | "paid";
   deliveryDate: string;
 };
 
@@ -60,7 +61,7 @@ export type AdminOrder = AdminOrderRow & {
   customerPhone: string;
   delivery: { recipientName: string; address: string; city: string; date: string; slot: string };
   cardMessage: string;
-  paymentStatus: "unpaid" | "demo" | "paid";
+  tracking: { courier: string; url: string };
   items: {
     productId: string;
     slug: string;

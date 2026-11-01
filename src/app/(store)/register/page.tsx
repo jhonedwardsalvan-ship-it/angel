@@ -8,7 +8,7 @@ import { safeNext } from "@/lib/safe-redirect";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: "Create an account · Angel",
+  title: "Create an account · AL",
   robots: { index: false },
 };
 
@@ -18,7 +18,7 @@ export default async function RegisterPage({ searchParams }: PageProps<"/registe
 
   return (
     <AuthShell
-      eyebrow="Join Angel"
+      eyebrow="Join AL"
       title="Create an account"
       description="Save your details for faster checkout and keep track of your gifts."
       footer={

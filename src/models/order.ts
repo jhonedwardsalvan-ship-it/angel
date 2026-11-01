@@ -1,4 +1,5 @@
-import { model, models, Schema, type InferSchemaType, type Model } from "mongoose";
+import { Schema, type InferSchemaType, type Model } from "mongoose";
+import { registerModel } from "./register";
 
 // No "server-only" or "@/" imports (see CLAUDE.md, models are loaded by scripts).
 
@@ -39,9 +40,15 @@ const orderSchema = new Schema(
       slot: { type: String, enum: ["morning", "afternoon", "evening"], required: true },
     },
     cardMessage: { type: String, default: "" },
+    /** Set by an admin when the order goes out for delivery. */
+    tracking: {
+      courier: { type: String, default: "" },
+      /** Courier's live tracking link (Lalamove, Grab, J&T…), shown to the buyer. */
+      url: { type: String, default: "" },
+    },
     payment: {
-      method: { type: String, enum: ["demo-card", "cod"], required: true },
-      // Demo checkout: card orders are marked "demo", nothing is charged.
+      // "arranged": no payment on the site; the team contacts the buyer. Others are older orders.
+      method: { type: String, enum: ["arranged", "demo-card", "cod"], required: true },
       status: { type: String, enum: ["demo", "unpaid", "paid"], required: true },
     },
     items: {
@@ -77,5 +84,4 @@ orderSchema.index({ createdAt: -1 });
 
 export type OrderDoc = InferSchemaType<typeof orderSchema>;
 
-export const Order =
-  (models.Order as Model<OrderDoc> | undefined) ?? model<OrderDoc>("Order", orderSchema);
+export const Order = registerModel("Order", orderSchema) as Model<OrderDoc>;

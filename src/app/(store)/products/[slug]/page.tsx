@@ -3,12 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductSection } from "@/components/home/product-section";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { CardIcon, TruckIcon } from "@/components/icons";
+import { highlightIcons } from "@/components/icons";
 import { AddToCart } from "@/components/product/add-to-cart";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { StockStatus } from "@/components/product/stock-status";
 import { formatPrice } from "@/lib/format";
 import { getProductBySlug, getRelatedProducts } from "@/lib/catalog/queries";
+import { fillSettingsTokens, getStoreSettings } from "@/lib/settings";
 
 // Render per request so price and stock are always current.
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ export async function generateMetadata({
   const product = await getProductBySlug((await params).slug);
   if (!product) return {};
   return {
-    title: `${product.name} · Angel`,
+    title: `${product.name} · AL`,
     description: product.description,
     openGraph: { images: [product.images[0].src] },
   };
@@ -33,7 +34,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
   const categoryHref = `/collections/${category.slug}`;
   const onSale =
     product.compareAtPrice !== undefined && product.compareAtPrice > product.price;
-  const related = await getRelatedProducts(product);
+  const [related, settings] = await Promise.all([getRelatedProducts(product), getStoreSettings()]);
 
   return (
     <>
@@ -85,22 +86,24 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
 
             <AddToCart productId={product.id} price={product.price} stock={product.stock} />
 
-            <ul className="stack gap-3 rounded-card bg-surface p-4 text-sm md:p-5">
-              <li className="flex gap-3">
-                <TruckIcon className="shrink-0 text-primary" />
-                <span>
-                  <strong className="font-medium">Same-day delivery</strong> on
-                  orders placed before 2 PM. Free over ₱2,500.
-                </span>
-              </li>
-              <li className="flex gap-3">
-                <CardIcon className="shrink-0 text-primary" />
-                <span>
-                  <strong className="font-medium">Free message card</strong>,
-                  handwritten and tucked into the wrap.
-                </span>
-              </li>
-            </ul>
+            {settings.productHighlights.length > 0 && (
+              <ul className="stack gap-3 rounded-card bg-surface p-4 text-sm md:p-5">
+                {settings.productHighlights.map((h) => {
+                  const Icon = highlightIcons[h.icon];
+                  const body = fillSettingsTokens(h.body, settings);
+                  return (
+                    <li key={h.title} className="flex gap-3">
+                      <Icon className="shrink-0 text-primary" />
+                      <span>
+                        <strong className="font-medium">{h.title}</strong>
+                        {/* No space before body text that starts with punctuation, e.g. ", handwritten…" */}
+                        {body && (/^[,.;:!?]/.test(body) ? body : ` ${body}`)}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
 
             <div className="accordion-group">
               <details className="accordion" open>

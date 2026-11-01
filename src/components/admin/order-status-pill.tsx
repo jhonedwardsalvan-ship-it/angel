@@ -1,13 +1,6 @@
-import type { OrderStatus } from "@/lib/orders/status";
+import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/orders/status";
 
-export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  preparing: "Preparing",
-  out_for_delivery: "Out for delivery",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-};
+export { ORDER_STATUS_LABELS };
 
 const TONE: Record<OrderStatus, string> = {
   pending: "badge-warning",

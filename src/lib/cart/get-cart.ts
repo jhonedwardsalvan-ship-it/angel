@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { getProductsByIds } from "@/lib/catalog/queries";
+import { getStoreSettings } from "@/lib/settings";
 import type { Product } from "@/types/catalog";
 import { readCart } from "./cart-cookie";
 import { deliveryFeeFor } from "./pricing";
@@ -20,6 +21,8 @@ export type Cart = {
   itemCount: number;
   subtotal: number;
   deliveryFee: number;
+  /** Current free-delivery minimum; 0 when free delivery is off. */
+  freeDeliveryMin: number;
   total: number;
   /** True when any line needs attention before checkout. */
   hasIssues: boolean;
@@ -30,7 +33,7 @@ export type Cart = {
  * deactivated drop out silently. Cached per request.
  */
 export const getCart = cache(async (): Promise<Cart> => {
-  const entries = await readCart();
+  const [entries, settings] = await Promise.all([readCart(), getStoreSettings()]);
   const products = entries.length
     ? await getProductsByIds(entries.map((e) => e.productId))
     : [];
@@ -45,12 +48,13 @@ export const getCart = cache(async (): Promise<Cart> => {
   });
 
   const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
-  const deliveryFee = deliveryFeeFor(subtotal);
+  const deliveryFee = deliveryFeeFor(subtotal, settings);
   return {
     lines,
     itemCount: lines.reduce((sum, l) => sum + l.quantity, 0),
     subtotal,
     deliveryFee,
+    freeDeliveryMin: settings.freeDeliveryMin,
     total: subtotal + deliveryFee,
     hasIssues: lines.some((l) => l.issue),
   };

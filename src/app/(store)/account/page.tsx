@@ -5,7 +5,7 @@ import { signOutAction } from "@/lib/auth-actions";
 import { requireSession } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: "Your account · Angel",
+  title: "Your account · AL",
   robots: { index: false },
 };
 
@@ -42,7 +42,10 @@ export default async function AccountPage() {
         <hr className="divider" />
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link href="/" className="btn btn-primary">
+          <Link href="/orders" className="btn btn-primary">
+            Your orders
+          </Link>
+          <Link href="/" className="btn btn-outline">
             Continue shopping
           </Link>
           <form action={signOutAction}>

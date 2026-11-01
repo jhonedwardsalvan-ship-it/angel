@@ -23,20 +23,15 @@ export const footerNav: { title: string; links: NavLink[] }[] = [
   {
     title: "Help",
     links: [
-      { label: "Delivery areas", href: "/pages/delivery" },
       { label: "Track an order", href: "/orders" },
-      { label: "Flower care", href: "/pages/flower-care" },
-      { label: "FAQ", href: "/pages/faq" },
-      { label: "Contact us", href: "/pages/contact" },
+      { label: "Contact us", href: "/contact" },
     ],
   },
   {
     title: "Company",
     links: [
-      { label: "Our story", href: "/pages/about" },
-      { label: "Corporate orders", href: "/pages/corporate" },
-      { label: "Terms", href: "/pages/terms" },
-      { label: "Privacy", href: "/pages/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Privacy", href: "/privacy" },
     ],
   },
 ];

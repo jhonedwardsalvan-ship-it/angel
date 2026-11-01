@@ -1,4 +1,5 @@
-import { model, models, Schema, type InferSchemaType, type Model } from "mongoose";
+import { Schema, type InferSchemaType, type Model } from "mongoose";
+import { registerModel } from "./register";
 
 // Append-only history of every stock change.
 
@@ -25,6 +26,4 @@ stockAdjustmentSchema.index({ createdAt: -1 });
 
 export type StockAdjustmentDoc = InferSchemaType<typeof stockAdjustmentSchema>;
 
-export const StockAdjustment =
-  (models.StockAdjustment as Model<StockAdjustmentDoc> | undefined) ??
-  model<StockAdjustmentDoc>("StockAdjustment", stockAdjustmentSchema);
+export const StockAdjustment = registerModel("StockAdjustment", stockAdjustmentSchema) as Model<StockAdjustmentDoc>;

@@ -6,7 +6,7 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { getCart } from "@/lib/cart/get-cart";
 
 export const metadata: Metadata = {
-  title: "Your cart · Angel",
+  title: "Your cart · AL",
   robots: { index: false },
 };
 
@@ -48,6 +48,7 @@ export default async function CartPage() {
             <OrderSummary
               subtotal={cart.subtotal}
               deliveryFee={cart.deliveryFee}
+              freeDeliveryMin={cart.freeDeliveryMin}
               total={cart.total}
               footer={
                 <div className="stack gap-3">

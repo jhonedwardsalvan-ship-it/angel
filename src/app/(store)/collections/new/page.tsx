@@ -3,7 +3,7 @@ import { ProductListing } from "@/components/product/product-listing";
 import { getNewArrivals } from "@/lib/catalog/queries";
 
 export const metadata: Metadata = {
-  title: "New arrivals · Angel",
+  title: "New arrivals · AL",
   description: "The latest bouquets, stems and gifts, newest first.",
 };
 

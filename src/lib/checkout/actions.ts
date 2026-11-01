@@ -7,14 +7,16 @@ import { writeCart } from "@/lib/cart/cart-cookie";
 import { getCart } from "@/lib/cart/get-cart";
 import { connectDB } from "@/lib/db/mongoose";
 import { releaseStock, reserveStock } from "@/lib/inventory";
+import { allowTrackedOrder } from "@/lib/orders/tracking";
 import { getSession } from "@/lib/session";
+import { getStoreSettings } from "@/lib/settings";
 import { Order } from "@/models/order";
-import { DELIVERY_SLOTS, MAX_DELIVERY_DAYS_AHEAD, PAYMENT_METHODS, storeDate } from "./delivery";
-import { writeLastOrder, type DeliverySlot, type PaymentMethod } from "./last-order";
+import { DELIVERY_SLOTS, MAX_DELIVERY_DAYS_AHEAD, storeDate } from "./delivery";
+import { writeLastOrder, type DeliverySlot } from "./last-order";
 
 export type CheckoutField =
   | "email" | "name" | "phone" | "recipientName" | "address" | "city"
-  | "deliveryDate" | "deliverySlot" | "cardMessage" | "paymentMethod";
+  | "deliveryDate" | "deliverySlot" | "cardMessage" | "agreeTerms";
 
 export type CheckoutState =
   | {
@@ -28,7 +30,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[+\d][\d\s()-]{6,19}$/;
 
 function orderNumber() {
-  return `AN-${Date.now().toString(36).toUpperCase()}-${randomBytes(2).toString("hex").toUpperCase()}`;
+  return `AL-${Date.now().toString(36).toUpperCase()}-${randomBytes(2).toString("hex").toUpperCase()}`;
 }
 
 function isDuplicateKey(error: unknown) {
@@ -37,12 +39,13 @@ function isDuplicateKey(error: unknown) {
 
 /**
  * Validates the form and the live cart, takes stock, saves the order and
- * empties the cart. Payment is still a demo: nothing is charged.
+ * empties the cart. No payment is taken on the site: the team contacts the
+ * buyer to arrange it, and preparation starts once an admin marks it paid.
  */
 export async function placeOrderAction(_prev: CheckoutState, formData: FormData): Promise<CheckoutState> {
   const fields = [
     "email", "name", "phone", "recipientName", "address", "city",
-    "deliveryDate", "deliverySlot", "cardMessage", "paymentMethod",
+    "deliveryDate", "deliverySlot", "cardMessage", "agreeTerms",
   ] as const;
   const values = Object.fromEntries(
     fields.map((f) => [f, String(formData.get(f) ?? "").trim()]),
@@ -55,16 +58,17 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
   if (!values.recipientName) fieldErrors.recipientName = "Who is receiving the flowers?";
   if (values.address.length < 8) fieldErrors.address = "Enter the full delivery address.";
   if (!values.city) fieldErrors.city = "Enter the city.";
-  if (
-    !/^\d{4}-\d{2}-\d{2}$/.test(values.deliveryDate) ||
-    values.deliveryDate < storeDate() ||
-    values.deliveryDate > storeDate(MAX_DELIVERY_DAYS_AHEAD)
-  ) {
-    fieldErrors.deliveryDate = `Choose a date between today and ${MAX_DELIVERY_DAYS_AHEAD} days from now.`;
+  // No rush orders: the earliest date is today + the lead time set in Admin → Settings.
+  const { leadDays } = await getStoreSettings();
+  const earliest = storeDate(leadDays);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(values.deliveryDate) || values.deliveryDate > storeDate(MAX_DELIVERY_DAYS_AHEAD)) {
+    fieldErrors.deliveryDate = `Choose a date up to ${MAX_DELIVERY_DAYS_AHEAD} days from now.`;
+  } else if (values.deliveryDate < earliest) {
+    fieldErrors.deliveryDate = `Orders must be booked at least ${leadDays} days ahead. Choose ${earliest} or later.`;
   }
   if (!(values.deliverySlot in DELIVERY_SLOTS)) fieldErrors.deliverySlot = "Choose a delivery time.";
   if (values.cardMessage.length > 200) fieldErrors.cardMessage = "Keep the message under 200 characters.";
-  if (!(values.paymentMethod in PAYMENT_METHODS)) fieldErrors.paymentMethod = "Choose a payment method.";
+  if (values.agreeTerms !== "on") fieldErrors.agreeTerms = "Please agree to the terms to place your order.";
   if (Object.keys(fieldErrors).length) return { fieldErrors, values };
 
   // Re-check the cart against live prices and stock right before ordering.
@@ -91,7 +95,6 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
   }
 
   const session = await getSession();
-  const paymentMethod = values.paymentMethod as PaymentMethod;
   let number = orderNumber();
   try {
     for (let attempt = 0; ; attempt++) {
@@ -109,7 +112,7 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
             slot: values.deliverySlot as DeliverySlot,
           },
           cardMessage: values.cardMessage,
-          payment: { method: paymentMethod, status: paymentMethod === "cod" ? "unpaid" : "demo" },
+          payment: { method: "arranged", status: "unpaid" },
           items: cart.lines.map((l) => ({
             product: l.product.id,
             slug: l.product.slug,
@@ -150,7 +153,7 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
     city: values.city,
     deliveryDate: values.deliveryDate,
     deliverySlot: values.deliverySlot as DeliverySlot,
-    paymentMethod,
+    phone: values.phone,
     items: cart.lines.map((l) => ({
       name: l.product.name.slice(0, 80),
       quantity: l.quantity,
@@ -160,6 +163,7 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
     deliveryFee: cart.deliveryFee,
     total: cart.total,
   });
+  await allowTrackedOrder(number);
   await writeCart([]);
   redirect("/checkout/confirmation");
 }

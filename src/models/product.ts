@@ -1,4 +1,5 @@
-import { model, models, Schema, type InferSchemaType, type Model } from "mongoose";
+import { Schema, type InferSchemaType, type Model } from "mongoose";
+import { registerModel } from "./register";
 import { imageSchema } from "./category";
 
 const wholeNumber = {
@@ -51,6 +52,4 @@ productSchema.index({ stock: 1, isActive: 1 });
 
 export type ProductDoc = InferSchemaType<typeof productSchema>;
 
-export const Product =
-  (models.Product as Model<ProductDoc> | undefined) ??
-  model<ProductDoc>("Product", productSchema);
+export const Product = registerModel("Product", productSchema) as Model<ProductDoc>;

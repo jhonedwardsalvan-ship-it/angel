@@ -8,6 +8,6 @@ export function StockStatus({ product }: { product: Product }) {
     case "low-stock":
       return <p className="stock stock-low">Only {product.stock} left in stock</p>;
     default:
-      return <p className="stock stock-in">In stock, ready for same-day delivery</p>;
+      return <p className="stock stock-in">In stock</p>;
   }
 }

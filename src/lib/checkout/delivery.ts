@@ -6,7 +6,9 @@ export const DELIVERY_SLOTS = {
   evening: "Evening, 4 – 7 PM",
 } as const;
 
+/** Labels for stored payment methods. New orders are always "arranged"; the others are older orders. */
 export const PAYMENT_METHODS = {
+  arranged: "Arranged with our team",
   "demo-card": "Card (demo — no charge)",
   cod: "Cash on delivery",
 } as const;

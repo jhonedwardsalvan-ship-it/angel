@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { OrderSummary } from "@/components/cart/order-summary";
-import { DELIVERY_SLOTS, PAYMENT_METHODS } from "@/lib/checkout/delivery";
+import { DELIVERY_SLOTS } from "@/lib/checkout/delivery";
 import { readLastOrder } from "@/lib/checkout/last-order";
 import { formatPrice } from "@/lib/format";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Thank you · Angel",
+  title: "Thank you · AL",
   robots: { index: false },
 };
 
@@ -30,15 +31,28 @@ export default async function ConfirmationPage() {
             <path d="m5 12 5 5L20 7" />
           </svg>
         </span>
-        <p className="eyebrow">Order confirmed</p>
+        <p className="eyebrow">Order request received</p>
         <h1 className="text-h2">Thank you, {order.name}!</h1>
-        <p className="max-w-md text-ink-muted">
-          Your order <strong className="font-medium text-ink">{order.number}</strong> is in. We&apos;ll
-          start arranging it for {order.recipientName} and send updates to {order.email}.
-        </p>
-        <p className="rounded-control border border-dashed border-line-strong px-4 py-2 text-xs text-ink-muted">
-          Demo checkout: no payment was taken and no email will be sent.
-        </p>
+        <div className="stack items-center gap-1">
+          <p className="text-sm text-ink-muted">Your order number</p>
+          <p className="text-h3 font-medium tracking-wide tabular-nums">{order.number}</p>
+          <p className="mt-2 text-sm font-medium">Save this order number so you can track your order.</p>
+          <p className="text-sm text-ink-muted">
+            Track it anytime on the{" "}
+            <Link href="/orders" className="link">Track an order page</Link>{" "}
+            using this number and your phone number.
+          </p>
+        </div>
+        <div className="stack max-w-md gap-2 rounded-card bg-surface p-4 text-left text-sm md:p-5">
+          <p>
+            <strong className="font-medium">Next step: payment.</strong> Our team will contact you at{" "}
+            <strong className="font-medium">{order.phone}</strong> to arrange payment.
+          </p>
+          <p className="text-ink-muted">
+            We start preparing the flowers for {order.recipientName} once payment is confirmed. Questions?
+            Call or text <a href={SITE.phoneHref} className="link">{SITE.phone}</a>.
+          </p>
+        </div>
       </header>
 
       <div className="stack gap-6">
@@ -67,7 +81,7 @@ export default async function ConfirmationPage() {
             </div>
             <div className="stack gap-1">
               <dt className="eyebrow">Payment</dt>
-              <dd>{PAYMENT_METHODS[order.paymentMethod]}</dd>
+              <dd>Awaiting payment. Our team will contact you.</dd>
             </div>
           </dl>
         </section>
@@ -86,8 +100,8 @@ export default async function ConfirmationPage() {
         </OrderSummary>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link href="/" className="btn btn-primary">Continue shopping</Link>
-          <Link href="/collections/new" className="btn btn-outline">See new arrivals</Link>
+          <Link href={`/orders/${order.number}`} className="btn btn-primary">Track this order</Link>
+          <Link href="/" className="btn btn-outline">Continue shopping</Link>
         </div>
       </div>
     </div>

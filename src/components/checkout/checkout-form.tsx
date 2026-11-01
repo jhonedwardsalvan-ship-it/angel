@@ -1,16 +1,19 @@
 "use client";
 
-import { useActionState, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useActionState, type ReactNode } from "react";
 import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
 import { placeOrderAction, type CheckoutField } from "@/lib/checkout/actions";
-import { DELIVERY_SLOTS, PAYMENT_METHODS } from "@/lib/checkout/delivery";
+import { DELIVERY_SLOTS } from "@/lib/checkout/delivery";
 import { formatPrice } from "@/lib/format";
 
 type CheckoutFormProps = {
   total: number;
   minDate: string;
   maxDate: string;
+  /** Minimum days between today and the delivery date. */
+  leadDays: number;
   /** Prefill from the signed-in account. */
   defaults: { name?: string; email?: string };
 };
@@ -28,9 +31,8 @@ function ErrorText({ id, message }: { id: string; message?: string }) {
   return message ? <p id={id} className="text-sm text-danger">{message}</p> : null;
 }
 
-export function CheckoutForm({ total, minDate, maxDate, defaults }: CheckoutFormProps) {
+export function CheckoutForm({ total, minDate, maxDate, leadDays, defaults }: CheckoutFormProps) {
   const [state, action, pending] = useActionState(placeOrderAction, undefined);
-  const [payment, setPayment] = useState<keyof typeof PAYMENT_METHODS>("demo-card");
   const v = (f: CheckoutField) => state?.values?.[f];
   const e = (f: CheckoutField) => state?.fieldErrors?.[f];
 
@@ -43,7 +45,7 @@ export function CheckoutForm({ total, minDate, maxDate, defaults }: CheckoutForm
           <FormField label="Your name" name="name" autoComplete="name" required defaultValue={v("name") ?? defaults.name} error={e("name")} />
           <FormField label="Phone" name="phone" type="tel" autoComplete="tel" inputMode="tel" required placeholder="0917 123 4567" defaultValue={v("phone")} error={e("phone")} />
         </div>
-        <FormField label="Email" name="email" type="email" autoComplete="email" inputMode="email" required hint="We'll send your order confirmation here." defaultValue={v("email") ?? defaults.email} error={e("email")} />
+        <FormField label="Email" name="email" type="email" autoComplete="email" inputMode="email" required hint="For your order records." defaultValue={v("email") ?? defaults.email} error={e("email")} />
       </Fieldset>
 
       <Fieldset legend="Delivery">
@@ -51,7 +53,7 @@ export function CheckoutForm({ total, minDate, maxDate, defaults }: CheckoutForm
         <FormField label="Address" name="address" autoComplete="street-address" required placeholder="House no., street, barangay" defaultValue={v("address")} error={e("address")} />
         <FormField label="City" name="city" autoComplete="address-level2" required defaultValue={v("city")} error={e("city")} />
         <div className="grid gap-5 sm:grid-cols-2">
-          <FormField label="Delivery date" name="deliveryDate" type="date" required min={minDate} max={maxDate} defaultValue={v("deliveryDate") ?? minDate} error={e("deliveryDate")} />
+          <FormField label="Delivery date" name="deliveryDate" type="date" required min={minDate} max={maxDate} defaultValue={v("deliveryDate") ?? minDate} error={e("deliveryDate")} hint={`At least ${leadDays} days from today. No rush orders.`} />
           <div className="stack gap-2">
             <label htmlFor="field-deliverySlot" className="text-sm">Delivery time</label>
             <select
@@ -92,51 +94,39 @@ export function CheckoutForm({ total, minDate, maxDate, defaults }: CheckoutForm
         </div>
       </Fieldset>
 
-      <fieldset className="stack gap-4">
-        <legend className="mb-1 text-h4">Payment</legend>
-        <p className="rounded-control border border-dashed border-line-strong px-4 py-3 text-sm text-ink-muted">
-          <strong className="font-medium text-ink">Demo checkout.</strong> No payment is taken and no
-          card details are collected. Placing an order only shows a confirmation.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {Object.entries(PAYMENT_METHODS).map(([value, label]) => (
-            <label key={value} className="chip min-h-14 justify-start gap-3 rounded-control px-4">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value={value}
-                checked={payment === value}
-                onChange={() => setPayment(value as keyof typeof PAYMENT_METHODS)}
-                className="size-4 accent-primary"
-              />
-              {label}
-            </label>
-          ))}
+      <section aria-labelledby="payment-title" className="stack gap-4">
+        <h2 id="payment-title" className="text-h4">Payment</h2>
+        <div className="stack gap-2 rounded-card bg-surface p-4 text-sm md:p-5">
+          <p>
+            <strong className="font-medium">No payment on this site.</strong> After you place your
+            order, our team will contact you at the phone number above to arrange payment.
+          </p>
+          <p className="text-ink-muted">
+            We start preparing your flowers once payment is confirmed. Orders are booked at least{" "}
+            {leadDays} days ahead, and there are no cancellations or refunds.
+          </p>
         </div>
-        {payment === "demo-card" && (
-          // Display only: these inputs have no name, so nothing is ever submitted.
-          <div className="panel stack gap-4 bg-surface" aria-label="Demo card details">
-            <div className="stack gap-2">
-              <span className="text-sm">Card number</span>
-              <input className="input tabular-nums" value="4242 4242 4242 4242" readOnly aria-label="Demo card number" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="stack gap-2">
-                <span className="text-sm">Expiry</span>
-                <input className="input" value="12 / 34" readOnly aria-label="Demo expiry" />
-              </div>
-              <div className="stack gap-2">
-                <span className="text-sm">CVC</span>
-                <input className="input" value="123" readOnly aria-label="Demo CVC" />
-              </div>
-            </div>
-          </div>
-        )}
-        <ErrorText id="field-paymentMethod-error" message={e("paymentMethod")} />
-      </fieldset>
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="agreeTerms"
+            required
+            defaultChecked={v("agreeTerms") === "on"}
+            aria-invalid={e("agreeTerms") ? true : undefined}
+            aria-describedby={e("agreeTerms") ? "field-agreeTerms-error" : undefined}
+            className="mt-1 size-4 shrink-0 accent-primary"
+          />
+          <span>
+            I agree to the{" "}
+            <Link href="/terms" target="_blank" className="link">Terms</Link>, including{" "}
+            <strong className="font-medium">no cancellation and no refund</strong> once my order is booked.
+          </span>
+        </label>
+        <ErrorText id="field-agreeTerms-error" message={e("agreeTerms")} />
+      </section>
 
       <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={pending}>
-        {pending ? "Placing order…" : `Place order · ${formatPrice(total)}`}
+        {pending ? "Placing order…" : `Place order request · ${formatPrice(total)}`}
       </button>
     </form>
   );

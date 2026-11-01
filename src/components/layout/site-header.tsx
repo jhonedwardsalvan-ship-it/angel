@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BagIcon, SearchIcon, UserIcon } from "@/components/icons";
 import { getCart } from "@/lib/cart/get-cart";
 import { mainNav } from "@/lib/navigation";
+import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 
 export async function SiteHeader() {
@@ -17,11 +18,8 @@ export async function SiteHeader() {
           </Link>
         </div>
 
-        <Link
-          href="/"
-          className="justify-self-center text-h3 tracking-[0.2em] uppercase lg:justify-self-start"
-        >
-          Angel
+        <Link href="/" className="justify-self-center lg:justify-self-start">
+          <Logo className="h-9 w-auto md:h-10" priority />
         </Link>
 
         <nav aria-label="Main" className="hidden justify-center lg:flex">

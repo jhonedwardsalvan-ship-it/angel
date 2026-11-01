@@ -50,9 +50,10 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
             </thead>
             <tbody>
               {orders.map((o) => (
-                <tr key={o.id}>
+                // The order link stretches over the whole row, so any cell opens the order.
+                <tr key={o.id} className="relative cursor-pointer transition-colors hover:bg-surface">
                   <td className="whitespace-nowrap">
-                    <Link href={`/admin/orders/${o.id}`} className="link font-medium">{o.number}</Link>
+                    <Link href={`/admin/orders/${o.id}`} className="link font-medium after:absolute after:inset-0 after:content-['']">{o.number}</Link>
                     <div className="text-xs text-ink-muted">{dateTime.format(new Date(o.createdAt))}</div>
                   </td>
                   <td>
@@ -63,7 +64,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
                   <td className="num">{o.itemCount}</td>
                   <td className="num">
                     {formatPrice(o.total)}
-                    <div className="text-xs text-ink-muted">{o.paymentMethod === "cod" ? "Cash on delivery" : "Demo card"}</div>
+                    <div className="text-xs text-ink-muted">{o.paymentStatus === "paid" ? "Paid" : o.paymentStatus === "demo" ? "Demo card" : o.paymentMethod === "cod" ? "Cash on delivery" : "Awaiting payment"}</div>
                   </td>
                   <td><OrderStatusPill status={o.status} /></td>
                 </tr>

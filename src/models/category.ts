@@ -1,4 +1,5 @@
-import { model, models, Schema, type InferSchemaType, type Model } from "mongoose";
+import { Schema, type InferSchemaType, type Model } from "mongoose";
+import { registerModel } from "./register";
 
 // No "server-only" or "@/" imports: scripts/seed.ts loads this file directly.
 
@@ -26,6 +27,4 @@ categorySchema.index({ sortOrder: 1 });
 
 export type CategoryDoc = InferSchemaType<typeof categorySchema>;
 
-export const Category =
-  (models.Category as Model<CategoryDoc> | undefined) ??
-  model<CategoryDoc>("Category", categorySchema);
+export const Category = registerModel("Category", categorySchema) as Model<CategoryDoc>;

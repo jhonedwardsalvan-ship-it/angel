@@ -9,8 +9,8 @@ const bodyFont = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Angel",
-  description: "Angel store",
+  title: "AL Flower Shop",
+  description: "Fresh flowers and gifts from AL Flower Shop",
 };
 
 export const viewport: Viewport = {

@@ -5,7 +5,7 @@ import { getCategories, searchProducts } from "@/lib/catalog/queries";
 import { parseSearchParams } from "@/lib/catalog/search";
 
 export const metadata: Metadata = {
-  title: "Search · Angel",
+  title: "Search · AL",
   robots: { index: false },
 };
 

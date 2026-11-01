@@ -8,7 +8,7 @@ import { safeNext } from "@/lib/safe-redirect";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: "Sign in · Angel",
+  title: "Sign in · AL",
   robots: { index: false },
 };
 

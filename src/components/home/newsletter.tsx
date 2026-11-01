@@ -3,7 +3,7 @@ export function Newsletter() {
     <section className="section bg-accent" aria-labelledby="newsletter-title">
       <div className="container-narrow stack items-center gap-4 text-center">
         <p className="eyebrow text-accent-foreground/70">Stay in bloom</p>
-        <h2 id="newsletter-title">Get 10% off your first order</h2>
+        <h2 id="newsletter-title">Join our mailing list</h2>
         <p className="text-accent-foreground/80">
           Seasonal launches, care tips and early access to holiday collections.
         </p>

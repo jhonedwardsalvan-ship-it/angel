@@ -14,7 +14,7 @@ export async function generateMetadata({
   const category = await getCategoryBySlug((await params).slug);
   if (!category) return {};
   return {
-    title: `${category.name} · Angel`,
+    title: `${category.name} · AL`,
     description: category.description,
     openGraph: { images: [category.image.src] },
   };

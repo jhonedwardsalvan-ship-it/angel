@@ -1,10 +1,12 @@
 // Pricing rules shared by the cart, checkout and confirmation pages.
-// Matches the "Free delivery over ₱2,500" promise in the announcement bar.
+// The delivery fee and free-delivery minimum come from store settings (Admin → Settings).
 
-export const FREE_DELIVERY_MIN = 2500;
-export const DELIVERY_FEE = 150;
 export const MAX_QUANTITY_PER_LINE = 10;
 
-export function deliveryFeeFor(subtotal: number) {
-  return subtotal === 0 || subtotal >= FREE_DELIVERY_MIN ? 0 : DELIVERY_FEE;
+type DeliveryRules = { deliveryFee: number; freeDeliveryMin: number };
+
+/** A freeDeliveryMin of 0 means delivery is never free. */
+export function deliveryFeeFor(subtotal: number, { deliveryFee, freeDeliveryMin }: DeliveryRules) {
+  if (subtotal === 0) return 0;
+  return freeDeliveryMin > 0 && subtotal >= freeDeliveryMin ? 0 : deliveryFee;
 }

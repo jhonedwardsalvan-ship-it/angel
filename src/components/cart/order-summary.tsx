@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { FREE_DELIVERY_MIN } from "@/lib/cart/pricing";
 import { formatPrice } from "@/lib/format";
 
 type OrderSummaryProps = {
   subtotal: number;
   deliveryFee: number;
   total: number;
+  /** Shows an "add ₱X more for free delivery" hint when set above 0. */
+  freeDeliveryMin?: number;
   /** Content above the totals, e.g. a compact item list at checkout. */
   children?: ReactNode;
   /** Call to action under the totals. */
@@ -13,8 +14,8 @@ type OrderSummaryProps = {
 };
 
 /** Totals panel shared by the cart, checkout and confirmation pages. */
-export function OrderSummary({ subtotal, deliveryFee, total, children, footer }: OrderSummaryProps) {
-  const toFreeDelivery = FREE_DELIVERY_MIN - subtotal;
+export function OrderSummary({ subtotal, deliveryFee, total, freeDeliveryMin = 0, children, footer }: OrderSummaryProps) {
+  const toFreeDelivery = freeDeliveryMin > 0 ? freeDeliveryMin - subtotal : 0;
 
   return (
     <section aria-labelledby="summary-title" className="stack gap-5 rounded-card bg-surface p-5 md:p-6">
