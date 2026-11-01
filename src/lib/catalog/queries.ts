@@ -5,7 +5,7 @@ import { connectDB } from "@/lib/db/mongoose";
 import { Category as CategoryModel, type CategoryDoc } from "@/models/category";
 import { AddOn as AddOnModel } from "@/models/add-on";
 import { Color as ColorModel } from "@/models/color";
-import { Product as ProductModel, type ProductDoc } from "@/models/product";
+import { Product as ProductModel, productColorIds, type ProductDoc } from "@/models/product";
 import type { AddOn, ColorOption } from "@/lib/catalog/configure";
 import type { SearchFilters, SearchSort } from "@/lib/catalog/search";
 import type { Category, Product } from "@/types/catalog";
@@ -40,28 +40,17 @@ const getActiveAddOns = cache(async (): Promise<SharedAddOn[]> => {
   return rows.map((a) => ({ id: a._id.toString(), name: a.name, price: a.price, appliesTo: a.appliesTo ?? "selected" }));
 });
 
-type SharedColor = ColorOption & { forFlowers: boolean; forWrappers: boolean; appliesTo: string };
-
 /** Active colors, loaded once per request. */
-const getActiveColors = cache(async (): Promise<SharedColor[]> => {
+const getActiveColors = cache(async (): Promise<ColorOption[]> => {
   await connectDB();
   const rows = await ColorModel.find({ isActive: true }).sort({ name: 1 }).lean();
-  return rows.map((c) => ({
-    id: c._id.toString(),
-    name: c.name,
-    hex: c.hex,
-    forFlowers: c.forFlowers ?? false,
-    forWrappers: c.forWrappers ?? false,
-    appliesTo: c.appliesTo ?? "selected",
-  }));
+  return rows.map((c) => ({ id: c._id.toString(), name: c.name, hex: c.hex }));
 });
 
-/** Colors of one kind offered on a product: "all products" colors plus the ones it ticked. */
-function colorsFor(ticked: Types.ObjectId[], all: SharedColor[], kind: "flower" | "wrapper"): ColorOption[] {
+/** The active colors a product ticked, in name order. */
+function colorsFor(ticked: Types.ObjectId[], all: ColorOption[]): ColorOption[] {
   const ids = new Set(ticked.map(String));
-  return all
-    .filter((c) => (kind === "flower" ? c.forFlowers : c.forWrappers) && (c.appliesTo === "all" || ids.has(c.id)))
-    .map(({ id, name, hex }) => ({ id, name, hex }));
+  return all.filter((c) => ids.has(c.id));
 }
 
 /** Add-ons offered on a product: every "all products" add-on plus the ones it ticked. */
@@ -73,8 +62,9 @@ function addOnsFor(ticked: Types.ObjectId[], all: SharedAddOn[]): AddOn[] {
 function toProduct(
   row: PopulatedProductRow & { category: NonNullable<PopulatedProductRow["category"]> },
   addOns: SharedAddOn[],
-  colors: SharedColor[],
+  colors: ColorOption[],
 ): Product {
+  const colorIds = productColorIds(row);
   return {
     id: row._id.toString(),
     slug: row.slug,
@@ -84,8 +74,8 @@ function toProduct(
     minPieces: row.minPieces ?? 5,
     madeToOrder: row.madeToOrder ?? false,
     addOns: addOnsFor(row.addOnIds ?? [], addOns),
-    flowerColors: colorsFor(row.colorIds ?? [], colors, "flower"),
-    wrapperColors: colorsFor(row.colorIds ?? [], colors, "wrapper"),
+    flowerColors: colorsFor(colorIds.flower, colors),
+    wrapperColors: colorsFor(colorIds.wrapper, colors),
     compareAtPrice: row.compareAtPrice ?? undefined,
     images: row.images.map(({ src, alt }) => ({ src, alt })),
     category: { slug: row.category.slug, name: row.category.name },

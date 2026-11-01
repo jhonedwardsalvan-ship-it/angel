@@ -31,8 +31,9 @@ export type AdminProduct = AdminProductRow & {
   madeToOrder: boolean;
   /** Shared add-ons ticked for this product. */
   addOnIds: string[];
-  /** Shared flower/wrapper colors ticked for this product. */
-  colorIds: string[];
+  /** Shared colors ticked for the flowers / the wrapper. */
+  flowerColorIds: string[];
+  wrapperColorIds: string[];
   description: string;
   details: string[];
   images: CatalogImage[];
@@ -123,9 +124,7 @@ export type AdminColor = {
   id: string;
   name: string;
   hex: string;
-  forFlowers: boolean;
-  forWrappers: boolean;
-  appliesTo: "all" | "selected";
   isActive: boolean;
+  /** Products that tick it for flowers or wrapper. */
   productCount: number;
 };

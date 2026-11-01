@@ -20,6 +20,26 @@ type ProductFormProps = {
   colors: AdminColor[];
 };
 
+/** One tick list of the active colors, e.g. the flower colors. */
+function ColorTicks({ legend, name, colors, selected }: { legend: string; name: string; colors: AdminColor[]; selected: Set<string> }) {
+  return (
+    <fieldset className="stack gap-2">
+      <legend className="mb-2 text-sm font-medium">{legend}</legend>
+      <ul className="flex flex-wrap gap-2">
+        {colors.filter((c) => c.isActive).map((c) => (
+          <li key={c.id}>
+            <label className="flex cursor-pointer items-center gap-2 rounded-pill border border-line px-3 py-1.5 text-sm">
+              <input type="checkbox" name={name} value={c.id} defaultChecked={selected.has(c.id)} className="size-4 accent-primary" />
+              <span className="size-4 rounded-pill border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
+              {c.name}
+            </label>
+          </li>
+        ))}
+      </ul>
+    </fieldset>
+  );
+}
+
 export function ProductForm({ product, categories, addOns, colors }: ProductFormProps) {
   const [state, action, pending] = useActionState(saveProductAction, undefined);
   const initial: Record<string, string> = product
@@ -42,7 +62,8 @@ export function ProductForm({ product, categories, addOns, colors }: ProductForm
     : { isActive: "on", stock: "0" };
   const v = (k: string) => state?.values?.[k] ?? initial[k] ?? "";
   // After a failed save, keep what was ticked; otherwise the product's saved add-ons.
-  const selectedColors = new Set(state?.values?.colorIds !== undefined ? state.values.colorIds.split(",") : (product?.colorIds ?? []));
+  const selectedFlowerColors = new Set(state?.values?.flowerColorIds !== undefined ? state.values.flowerColorIds.split(",") : (product?.flowerColorIds ?? []));
+  const selectedWrapperColors = new Set(state?.values?.wrapperColorIds !== undefined ? state.values.wrapperColorIds.split(",") : (product?.wrapperColorIds ?? []));
   const selectedAddOns = new Set(state?.values?.addOnIds !== undefined ? state.values.addOnIds.split(",") : (product?.addOnIds ?? []));
   const e = (k: string) => state?.fieldErrors?.[k];
 
@@ -112,32 +133,17 @@ export function ProductForm({ product, categories, addOns, colors }: ProductForm
         <div className="stack gap-1">
           <h2 className="text-h4">Colors</h2>
           <p className="text-sm text-ink-muted">
-            Tick the colors buyers can choose for this product. Each is offered for flowers, wrapper or both, as set in Colors; buyers pick 1 or 2 of each. Tick none to skip colors.{" "}
+            Tick the colors buyers can choose for the flowers and for the wrapper; they pick 1 or 2 of each. Leave a list empty to skip it.{" "}
             <Link href="/admin/colors" className="link">Manage colors</Link>
           </p>
         </div>
         {colors.filter((c) => c.isActive).length === 0 ? (
           <p className="text-sm text-ink-muted">No colors yet.</p>
         ) : (
-          <ul className="flex flex-wrap gap-2">
-            {colors.filter((c) => c.isActive).map((c) => (
-              <li key={c.id}>
-                <label className={`flex items-center gap-2 rounded-pill border border-line px-3 py-1.5 text-sm ${c.appliesTo === "all" ? "text-ink-muted" : "cursor-pointer"}`}>
-                  {c.appliesTo === "all" ? (
-                    <input type="checkbox" checked disabled className="size-4" aria-label={`${c.name} (all products)`} />
-                  ) : (
-                    <input type="checkbox" name="colorIds" value={c.id} defaultChecked={selectedColors.has(c.id)} className="size-4 accent-primary" />
-                  )}
-                  <span className="size-4 rounded-pill border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
-                  {c.name}
-                  <span className="text-xs text-ink-muted">
-                    · {[c.forFlowers && "flowers", c.forWrappers && "wrapper"].filter(Boolean).join(" & ")}
-                    {c.appliesTo === "all" && ", all products"}
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ColorTicks legend="Flower colors" name="flowerColorIds" colors={colors} selected={selectedFlowerColors} />
+            <ColorTicks legend="Wrapper colors" name="wrapperColorIds" colors={colors} selected={selectedWrapperColors} />
+          </>
         )}
       </div>
 

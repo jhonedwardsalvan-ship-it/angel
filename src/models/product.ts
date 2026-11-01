@@ -1,4 +1,4 @@
-import { Schema, type InferSchemaType, type Model } from "mongoose";
+import { Schema, type InferSchemaType, type Model, type Types } from "mongoose";
 import { registerModel } from "./register";
 import { imageSchema } from "./category";
 
@@ -23,8 +23,9 @@ const productSchema = new Schema(
     madeToOrder: { type: Boolean, default: false },
     /** Shared add-ons ticked for this product (add-ons set to "all products" apply anyway). */
     addOnIds: { type: [{ type: Schema.Types.ObjectId, ref: "AddOn" }], default: [] },
-    /** Shared flower/wrapper colors ticked for this product (colors set to "all products" apply anyway). */
-    colorIds: { type: [{ type: Schema.Types.ObjectId, ref: "Color" }], default: [] },
+    /** Shared colors buyers can pick for the flowers / the wrapper (1–2 of each). */
+    flowerColorIds: { type: [{ type: Schema.Types.ObjectId, ref: "Color" }], default: [] },
+    wrapperColorIds: { type: [{ type: Schema.Types.ObjectId, ref: "Color" }], default: [] },
     compareAtPrice: {
       type: Number,
       min: 0,
@@ -63,3 +64,13 @@ productSchema.index({ stock: 1, isActive: 1 });
 export type ProductDoc = InferSchemaType<typeof productSchema>;
 
 export const Product = registerModel("Product", productSchema) as Model<ProductDoc>;
+
+/**
+ * Flower and wrapper color ids of a lean product row. Products saved before the
+ * two lists existed have one legacy "colorIds" list, offered for both.
+ */
+export function productColorIds(row: Pick<ProductDoc, "flowerColorIds" | "wrapperColorIds">) {
+  const legacy = (row as { colorIds?: Types.ObjectId[] }).colorIds ?? [];
+  const old = row.flowerColorIds === undefined && row.wrapperColorIds === undefined;
+  return { flower: old ? legacy : (row.flowerColorIds ?? []), wrapper: old ? legacy : (row.wrapperColorIds ?? []) };
+}

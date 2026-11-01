@@ -16,6 +16,11 @@ import { Color } from "@/models/color";
 import { deleteUnusedImages } from "../cloudinary";
 import { checked, isAllowedImageUrl, isDuplicateKey, parseImageLines, text, uploadedThisEdit, wholeNumber } from "../form";
 
+/** The ticked color ids that still exist. */
+async function existingColors(ids: string[]) {
+  return ids.length ? (await Color.find({ _id: { $in: ids } }, { _id: 1 }).lean()).map((c) => c._id) : [];
+}
+
 export async function saveProductAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const session = await requireAdmin();
   const id = text(formData, "id", 24);
@@ -46,8 +51,11 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
   // Ticked shared add-ons; unknown ids are ignored.
   const tickedAddOns = formData.getAll("addOnIds").map(String).filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 50);
   values.addOnIds = tickedAddOns.join(",");
-  const tickedColors = formData.getAll("colorIds").map(String).filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 100);
-  values.colorIds = tickedColors.join(",");
+  const tickedColors = (name: string) => formData.getAll(name).map(String).filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 100);
+  const flowerColors = tickedColors("flowerColorIds");
+  const wrapperColors = tickedColors("wrapperColorIds");
+  values.flowerColorIds = flowerColors.join(",");
+  values.wrapperColorIds = wrapperColors.join(",");
 
   if (images.length === 0) fieldErrors.images = "Upload at least one photo.";
   else if (images.some((img) => !isAllowedImageUrl(img.src))) {
@@ -69,7 +77,8 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
     price,
     minPieces,
     madeToOrder: pricing === "per_piece" || values.madeToOrder === "on",
-    colorIds: tickedColors.length ? (await Color.find({ _id: { $in: tickedColors } }, { _id: 1 }).lean()).map((c) => c._id) : [],
+    flowerColorIds: await existingColors(flowerColors),
+    wrapperColorIds: await existingColors(wrapperColors),
     addOnIds: tickedAddOns.length ? (await AddOn.find({ _id: { $in: tickedAddOns } }, { _id: 1 }).lean()).map((a) => a._id) : [],
     description: values.description,
     details,
@@ -94,6 +103,8 @@ export async function saveProductAction(_prev: AdminFormState, formData: FormDat
       // Clearing the sale price must remove the field, not leave the old one.
       doc.set("compareAtPrice", compareAtPrice);
       await doc.save(); // save() runs every schema validator
+      // Drop the legacy single color list now that both lists are saved.
+      await Product.collection.updateOne({ _id: doc._id }, { $unset: { colorIds: "" } });
     } else {
       const doc = await Product.create({ ...data, compareAtPrice, stock: 0 });
       savedId = doc._id.toString();
