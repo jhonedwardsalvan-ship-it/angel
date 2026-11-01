@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
+import { Suspense } from "react";
+import { NavigationOverlay } from "@/components/layout/navigation-overlay";
 import "./globals.css";
 
 const bodyFont = DM_Sans({
@@ -20,7 +22,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${bodyFont.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {/* useSearchParams needs a Suspense boundary; the overlay renders nothing until a navigation starts. */}
+        <Suspense fallback={null}>
+          <NavigationOverlay />
+        </Suspense>
+      </body>
     </html>
   );
 }

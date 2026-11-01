@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { AnimatedDots, BloomingFlower } from "@/components/layout/blooming";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 
@@ -19,15 +19,11 @@ export default function NotFound() {
       <SiteHeader />
       <main className="flex flex-1 items-center">
         <div className="container-narrow stack items-center gap-6 py-20 text-center md:py-28">
-          <Image src="/flower.png" alt="" width={160} height={160} priority className="size-28 animate-bloom md:size-36" />
+          <BloomingFlower />
           <p className="eyebrow">Coming soon</p>
           <h1 className="text-h1" aria-label="Flowering soon">
             Flowering soon
-            <span aria-hidden="true" className="inline-flex">
-              {[0, 1, 2].map((i) => (
-                <span key={i} className="inline-block animate-dot" style={{ animationDelay: `${i * 0.2}s` }}>.</span>
-              ))}
-            </span>
+            <AnimatedDots />
           </h1>
           <p className="max-w-sm text-ink-muted">
             This page is still growing. We&apos;re arranging something beautiful here, so check back soon.
