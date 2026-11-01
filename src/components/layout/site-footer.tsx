@@ -14,7 +14,7 @@ export async function SiteFooter() {
             <LogoBadge className="size-28" tone="light" />
           </Link>
           <p className="text-sm text-ink-subtle">
-            Fresh flowers and thoughtful gifts, arranged by hand. Book 3–5 days
+            Handcrafted flowers and thoughtful gifts that last. Book 3–5 days
             ahead of your date.
           </p>
           <a href={SITE.phoneHref} className="w-fit text-sm text-ink-inverse/75 transition-colors hover:text-ink-inverse">

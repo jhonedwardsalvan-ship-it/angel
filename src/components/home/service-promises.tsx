@@ -2,7 +2,7 @@ import { CardIcon, LeafIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 
 const promises = [
   { icon: TruckIcon, title: "Book 3–5 days ahead", body: "Pick your delivery date at checkout." },
-  { icon: LeafIcon, title: "Arranged to order", body: "Fresh, seasonal blooms prepared for your date." },
+  { icon: LeafIcon, title: "Made to last", body: "Handcrafted blooms that never wilt or need water." },
   { icon: CardIcon, title: "Handwritten card", body: "Add a personal note at no cost." },
   { icon: ShieldIcon, title: "No online payment", body: "Our team contacts you to arrange payment." },
 ];

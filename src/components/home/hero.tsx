@@ -19,13 +19,13 @@ export function Hero({ image }: { image: CatalogImage }) {
       />
       <div className="container-page py-12 md:py-20">
         <div className="stack max-w-xl items-start gap-5 text-ink-inverse">
-          <p className="eyebrow text-ink-inverse/80">Fresh this week</p>
+          <p className="eyebrow text-ink-inverse/80">Handmade with love</p>
           <h1 className="text-display text-ink-inverse">
             Flowers that say it better than words
           </h1>
           <p className="max-w-md text-ink-inverse/85 md:text-lg">
-            Seasonal blooms arranged by hand for your date. Book 3–5 days
-            ahead and we&apos;ll take care of the rest.
+            Handcrafted flowers that last for years, made for your date. Book
+            3–5 days ahead and we&apos;ll take care of the rest.
           </p>
           <div className="mt-2 grid w-full gap-3 sm:flex sm:w-auto sm:flex-wrap">
             <Link href="/collections/bouquets" className="btn btn-lg bg-canvas text-ink hover:bg-surface">

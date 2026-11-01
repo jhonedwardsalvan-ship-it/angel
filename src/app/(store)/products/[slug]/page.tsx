@@ -118,17 +118,19 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
               <details className="accordion">
                 <summary>Care guide</summary>
                 <p>
-                  Trim stems at an angle and place in clean, cool water as soon
-                  as they arrive. Refresh the water every two days and keep
-                  away from direct sun and ripening fruit.
+                  No water needed. Keep it indoors, away from direct sunlight
+                  and damp, so the colours stay bright. Dust gently with a soft
+                  dry brush or a hairdryer on cool, and reshape petals and
+                  stems with your fingers if they get bent.
                 </p>
               </details>
               <details className="accordion">
                 <summary>Delivery &amp; returns</summary>
                 <p>
-                  We deliver daily from 9 AM to 7 PM. Fresh flowers can&apos;t
-                  be returned, but if anything arrives less than perfect,
-                  send us a photo within 24 hours and we&apos;ll replace it.
+                  Delivered in the time slot you choose. Orders can&apos;t be
+                  cancelled or refunded once booked (see our{" "}
+                  <Link href="/terms" className="link">Terms</Link>). If
+                  something arrives damaged, message us a photo within 24 hours.
                 </p>
               </details>
             </div>

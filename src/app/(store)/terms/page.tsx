@@ -50,8 +50,8 @@ export default async function TermsPage() {
         <h2>4. No cancellations, no refunds</h2>
         <p>
           Once your order is booked, it <strong>cannot be cancelled</strong>, and payments are{" "}
-          <strong>non-refundable</strong>. We buy fresh flowers and plan each arrangement for your date, so we can&apos;t
-          resell them. Please double-check the date, time and recipient details before placing your order.
+          <strong>non-refundable</strong>. We make each piece by hand for your date, so we can&apos;t
+          resell it. Please double-check the date, time and recipient details before placing your order.
         </p>
       </section>
 
@@ -72,10 +72,10 @@ export default async function TermsPage() {
       </section>
 
       <section>
-        <h2>6. Flowers and substitutions</h2>
+        <h2>6. Handmade items and substitutions</h2>
         <p>
-          Flowers are natural and seasonal, so every arrangement is a little different from the photos. If a flower
-          or container isn&apos;t available, we may substitute one of similar style and equal or greater value.
+          Every piece is made by hand, so colours, sizes and shapes can differ slightly from the photos. If a material
+          or colour isn&apos;t available, we may use one of similar style and equal or greater value.
         </p>
       </section>
 
