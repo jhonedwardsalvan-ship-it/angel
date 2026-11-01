@@ -268,7 +268,7 @@ export async function listAddOns(): Promise<AdminAddOn[]> {
 export async function listColors(): Promise<AdminColor[]> {
   await connectDB();
   const [rows, counts] = await Promise.all([
-    Color.find().sort({ kind: 1, isActive: -1, name: 1, _id: 1 }).lean(),
+    Color.find().sort({ isActive: -1, name: 1, _id: 1 }).lean(),
     Product.aggregate<{ _id: Id; n: number }>([{ $unwind: "$colorIds" }, { $group: { _id: "$colorIds", n: { $sum: 1 } } }]),
   ]);
   const countById = new Map(counts.map((c) => [c._id.toString(), c.n]));
@@ -276,7 +276,8 @@ export async function listColors(): Promise<AdminColor[]> {
     id: c._id.toString(),
     name: c.name,
     hex: c.hex,
-    kind: c.kind === "wrapper" ? "wrapper" : "flower",
+    forFlowers: c.forFlowers ?? false,
+    forWrappers: c.forWrappers ?? false,
     appliesTo: c.appliesTo === "all" ? "all" : "selected",
     isActive: c.isActive,
     productCount: countById.get(c._id.toString()) ?? 0,

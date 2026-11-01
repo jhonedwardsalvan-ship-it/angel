@@ -123,7 +123,8 @@ export type AdminColor = {
   id: string;
   name: string;
   hex: string;
-  kind: "flower" | "wrapper";
+  forFlowers: boolean;
+  forWrappers: boolean;
   appliesTo: "all" | "selected";
   isActive: boolean;
   productCount: number;

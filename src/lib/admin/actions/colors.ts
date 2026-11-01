@@ -15,17 +15,19 @@ export async function saveColorAction(formData: FormData) {
   const id = text(formData, "id", 24);
   const name = text(formData, "name", 30);
   const hex = text(formData, "hex", 7).toLowerCase();
-  const kind = text(formData, "kind", 10) === "wrapper" ? "wrapper" : "flower";
+  const forFlowers = checked(formData, "forFlowers");
+  const forWrappers = checked(formData, "forWrappers");
   const appliesTo = text(formData, "appliesTo", 10) === "all" ? "all" : "selected";
   if (!name) back("error", "Give the color a name.");
   if (!/^#[0-9a-f]{6}$/.test(hex)) back("error", `Pick a swatch color for “${name}”.`);
+  if (!forFlowers && !forWrappers) back("error", `Tick Flowers, Wrapper or both for “${name}”.`);
 
   await connectDB();
   if (id) {
-    const updated = await Color.findByIdAndUpdate(id, { name, hex, kind, appliesTo, isActive: checked(formData, "isActive") });
+    const updated = await Color.findByIdAndUpdate(id, { name, hex, forFlowers, forWrappers, appliesTo, isActive: checked(formData, "isActive") });
     if (!updated) back("error", "That color no longer exists.");
   } else {
-    await Color.create({ name, hex, kind, appliesTo, isActive: true });
+    await Color.create({ name, hex, forFlowers, forWrappers, appliesTo, isActive: true });
   }
   back("notice", `Saved “${name}”.`);
 }

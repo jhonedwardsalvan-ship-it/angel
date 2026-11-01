@@ -112,38 +112,33 @@ export function ProductForm({ product, categories, addOns, colors }: ProductForm
         <div className="stack gap-1">
           <h2 className="text-h4">Colors</h2>
           <p className="text-sm text-ink-muted">
-            Tick the colors buyers can choose for this product (they pick 1 or 2 of each). Leave a group empty to skip it.{" "}
+            Tick the colors buyers can choose for this product. Each is offered for flowers, wrapper or both, as set in Colors; buyers pick 1 or 2 of each. Tick none to skip colors.{" "}
             <Link href="/admin/colors" className="link">Manage colors</Link>
           </p>
         </div>
-        {(["flower", "wrapper"] as const).map((kind) => {
-          const list = colors.filter((c) => c.kind === kind && c.isActive);
-          return (
-            <fieldset key={kind} className="stack gap-2">
-              <legend className="mb-1 text-sm font-medium">{kind === "flower" ? "Flower colors" : "Wrapper colors"}</legend>
-              {list.length === 0 ? (
-                <p className="text-sm text-ink-muted">None yet.</p>
-              ) : (
-                <ul className="flex flex-wrap gap-2">
-                  {list.map((c) => (
-                    <li key={c.id}>
-                      <label className={`flex items-center gap-2 rounded-pill border border-line px-3 py-1.5 text-sm ${c.appliesTo === "all" ? "text-ink-muted" : "cursor-pointer"}`}>
-                        {c.appliesTo === "all" ? (
-                          <input type="checkbox" checked disabled className="size-4" aria-label={`${c.name} (all products)`} />
-                        ) : (
-                          <input type="checkbox" name="colorIds" value={c.id} defaultChecked={selectedColors.has(c.id)} className="size-4 accent-primary" />
-                        )}
-                        <span className="size-4 rounded-pill border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
-                        {c.name}
-                        {c.appliesTo === "all" && <span className="text-xs">· all products</span>}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </fieldset>
-          );
-        })}
+        {colors.filter((c) => c.isActive).length === 0 ? (
+          <p className="text-sm text-ink-muted">No colors yet.</p>
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {colors.filter((c) => c.isActive).map((c) => (
+              <li key={c.id}>
+                <label className={`flex items-center gap-2 rounded-pill border border-line px-3 py-1.5 text-sm ${c.appliesTo === "all" ? "text-ink-muted" : "cursor-pointer"}`}>
+                  {c.appliesTo === "all" ? (
+                    <input type="checkbox" checked disabled className="size-4" aria-label={`${c.name} (all products)`} />
+                  ) : (
+                    <input type="checkbox" name="colorIds" value={c.id} defaultChecked={selectedColors.has(c.id)} className="size-4 accent-primary" />
+                  )}
+                  <span className="size-4 rounded-pill border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
+                  {c.name}
+                  <span className="text-xs text-ink-muted">
+                    · {[c.forFlowers && "flowers", c.forWrappers && "wrapper"].filter(Boolean).join(" & ")}
+                    {c.appliesTo === "all" && ", all products"}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="panel stack gap-5">

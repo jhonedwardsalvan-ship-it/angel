@@ -40,20 +40,27 @@ const getActiveAddOns = cache(async (): Promise<SharedAddOn[]> => {
   return rows.map((a) => ({ id: a._id.toString(), name: a.name, price: a.price, appliesTo: a.appliesTo ?? "selected" }));
 });
 
-type SharedColor = ColorOption & { kind: string; appliesTo: string };
+type SharedColor = ColorOption & { forFlowers: boolean; forWrappers: boolean; appliesTo: string };
 
 /** Active colors, loaded once per request. */
 const getActiveColors = cache(async (): Promise<SharedColor[]> => {
   await connectDB();
   const rows = await ColorModel.find({ isActive: true }).sort({ name: 1 }).lean();
-  return rows.map((c) => ({ id: c._id.toString(), name: c.name, hex: c.hex, kind: c.kind, appliesTo: c.appliesTo ?? "selected" }));
+  return rows.map((c) => ({
+    id: c._id.toString(),
+    name: c.name,
+    hex: c.hex,
+    forFlowers: c.forFlowers ?? false,
+    forWrappers: c.forWrappers ?? false,
+    appliesTo: c.appliesTo ?? "selected",
+  }));
 });
 
 /** Colors of one kind offered on a product: "all products" colors plus the ones it ticked. */
 function colorsFor(ticked: Types.ObjectId[], all: SharedColor[], kind: "flower" | "wrapper"): ColorOption[] {
   const ids = new Set(ticked.map(String));
   return all
-    .filter((c) => c.kind === kind && (c.appliesTo === "all" || ids.has(c.id)))
+    .filter((c) => (kind === "flower" ? c.forFlowers : c.forWrappers) && (c.appliesTo === "all" || ids.has(c.id)))
     .map(({ id, name, hex }) => ({ id, name, hex }));
 }
 
