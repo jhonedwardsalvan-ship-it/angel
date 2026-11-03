@@ -72,11 +72,12 @@ function ColorPicker({ label, colors, selected, onChange }: {
               key={c.id}
               type="button"
               aria-pressed={on}
+              aria-label={c.name}
+              title={c.name}
               onClick={() => toggle(c.id)}
-              className={`flex items-center gap-2 rounded-pill border px-3 py-1.5 text-sm transition-colors ${on ? "border-ink bg-surface" : "border-line hover:border-line-strong"}`}
+              className={`rounded-pill border-2 p-0.5 transition-colors ${on ? "border-ink" : "border-transparent hover:border-line-strong"}`}
             >
-              <span className="size-5 rounded-pill border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
-              {c.name}
+              <span className="block size-8 rounded-pill border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
             </button>
           );
         })}
