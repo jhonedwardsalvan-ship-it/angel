@@ -314,6 +314,8 @@
   }
 
   .card-product {
+    /* Contains the absolute sr-only price labels; without it they escape a rail's scroll clip and widen the page on mobile. */
+    position: relative;
     color: var(--color-ink);
     flex-direction: column;
     gap: .75rem;
