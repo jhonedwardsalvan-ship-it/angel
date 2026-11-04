@@ -8,7 +8,6 @@ import { disconnect } from "@/lib/tiktok/client";
 import { syncTikTokVideos } from "@/lib/tiktok/sync";
 import { Product } from "@/models/product";
 import { TikTokVideo } from "@/models/tiktok-video";
-import { checked, text, wholeNumber } from "../form";
 
 const isObjectId = (id: string) => Types.ObjectId.isValid(id) && /^[a-f0-9]{24}$/i.test(id);
 const back = (key: "notice" | "error", message: string) => redirect(`/admin/tiktok?${key}=${encodeURIComponent(message)}`);
@@ -20,24 +19,44 @@ export async function syncTikTokAction() {
   if (result.ok) back("notice", `Synced ${result.total} videos${result.added ? `, ${result.added} new (hidden until you show them)` : ""}.`);
 }
 
-/** Saves one video row: shown on the store or not, its "Shop this" product, and its position. */
-export async function saveTikTokVideoAction(formData: FormData) {
-  await requireAdmin();
-  const id = text(formData, "id", 24);
-  const productId = text(formData, "productId", 24);
-  const sortOrder = wholeNumber(formData, "sortOrder");
-  if (!isObjectId(id)) back("error", "That video no longer exists.");
-  if (productId && !isObjectId(productId)) back("error", "Pick a product from the list.");
+// The video manager on Admin → TikTok calls these directly and updates its own
+// list, so they return a result instead of redirecting.
+export type TikTokVideoResult = { ok: true } | { ok: false; error: string };
 
+const gone: TikTokVideoResult = { ok: false, error: "That video no longer exists. Reload the page." };
+
+/** Shows a video on the store (added at the end of the order) or hides it. */
+export async function setTikTokVideoShownAction(id: string, show: boolean): Promise<TikTokVideoResult> {
+  await requireAdmin();
+  if (!isObjectId(id)) return gone;
   await connectDB();
-  if (productId && !(await Product.exists({ _id: productId }))) back("error", "That product no longer exists.");
-  const updated = await TikTokVideo.findByIdAndUpdate(id, {
-    hidden: !checked(formData, "show"),
-    product: productId || null,
-    sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
-  });
-  if (!updated) back("error", "That video no longer exists.");
-  back("notice", "Video saved.");
+  let update: Record<string, unknown> = { hidden: true };
+  if (show) {
+    const last = await TikTokVideo.findOne({ hidden: false }, { sortOrder: 1 }).sort({ sortOrder: -1 }).lean();
+    update = { hidden: false, sortOrder: (last?.sortOrder ?? -1) + 1 };
+  }
+  const updated = await TikTokVideo.findByIdAndUpdate(id, update);
+  return updated ? { ok: true } : gone;
+}
+
+/** Saves the store order: `ids` are the shown videos, first to last. */
+export async function reorderTikTokVideosAction(ids: string[]): Promise<TikTokVideoResult> {
+  await requireAdmin();
+  if (!Array.isArray(ids) || ids.length > 500 || !ids.every((id) => typeof id === "string" && isObjectId(id))) return gone;
+  await connectDB();
+  await TikTokVideo.bulkWrite(ids.map((id, i) => ({ updateOne: { filter: { _id: id }, update: { $set: { sortOrder: i } } } })));
+  return { ok: true };
+}
+
+/** Links the "Shop this" product, or unlinks it with an empty id. */
+export async function setTikTokVideoProductAction(id: string, productId: string): Promise<TikTokVideoResult> {
+  await requireAdmin();
+  if (!isObjectId(id)) return gone;
+  if (productId && !isObjectId(productId)) return { ok: false, error: "Pick a product from the list." };
+  await connectDB();
+  if (productId && !(await Product.exists({ _id: productId }))) return { ok: false, error: "That product no longer exists. Reload the page." };
+  const updated = await TikTokVideo.findByIdAndUpdate(id, { product: productId || null });
+  return updated ? { ok: true } : gone;
 }
 
 /** Disconnects the account. Synced videos stay, so the store keeps showing them. */

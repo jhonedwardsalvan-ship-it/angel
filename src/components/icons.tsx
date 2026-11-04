@@ -117,6 +117,24 @@ export const PlayIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const HeartIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 20.25s-7.5-4.6-7.5-10.1A4.15 4.15 0 0 1 8.65 6c1.4 0 2.6.7 3.35 1.8A4.04 4.04 0 0 1 15.35 6a4.15 4.15 0 0 1 4.15 4.15c0 5.5-7.5 10.1-7.5 10.1Z" />
+  </Icon>
+);
+
+export const CommentIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20.25 11.6c0 4-3.7 7.15-8.25 7.15-1.1 0-2.15-.18-3.1-.52L4.5 19.5l1.3-3.3A6.7 6.7 0 0 1 3.75 11.6c0-3.95 3.7-7.1 8.25-7.1s8.25 3.15 8.25 7.1Z" />
+  </Icon>
+);
+
+export const ShareIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 15V3.75m0 0L8.25 7.5M12 3.75l3.75 3.75M6.75 11.25H6a1.5 1.5 0 0 0-1.5 1.5v6A1.5 1.5 0 0 0 6 20.25h12a1.5 1.5 0 0 0 1.5-1.5v-6a1.5 1.5 0 0 0-1.5-1.5h-.75" />
+  </Icon>
+);
+
 /** Icons admins can pick for store highlights (Admin → Settings). */
 export const highlightIcons = {
   truck: TruckIcon,

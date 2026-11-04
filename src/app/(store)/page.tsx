@@ -19,7 +19,7 @@ export default async function Home() {
     getFeaturedProducts(),
     getNewArrivals(),
     // A TikTok problem shouldn't take the home page down; the section just hides.
-    getStoreTikTokVideos().catch(() => []),
+    getStoreTikTokVideos().catch((e) => (console.error("Home: couldn't load TikTok videos", e), [])),
   ]);
 
   return (

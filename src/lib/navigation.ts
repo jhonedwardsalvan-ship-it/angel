@@ -4,9 +4,16 @@ type MenuCategory = { name: string; slug: string };
 
 const categoryLink = (c: MenuCategory): NavLink => ({ label: c.name, href: `/collections/${c.slug}` });
 
-/** Top menu: "New Arrivals" is always first, then the categories chosen in Admin → Categories. */
-export function mainNavFor(menuCategories: MenuCategory[]): NavLink[] {
-  return [{ label: "New Arrivals", href: "/collections/new" }, ...menuCategories.map(categoryLink)];
+/**
+ * Top menu: "New Arrivals" is always first, then the categories chosen in
+ * Admin → Categories, then "Bloom" (the TikTok video feed) once any video is shown.
+ */
+export function mainNavFor(menuCategories: MenuCategory[], showBloom = false): NavLink[] {
+  return [
+    { label: "New Arrivals", href: "/collections/new" },
+    ...menuCategories.map(categoryLink),
+    ...(showBloom ? [{ label: "Bloom", href: "/bloom" }] : []),
+  ];
 }
 
 /** Footer columns: "Shop" lists every live category, Help and Company are fixed. */

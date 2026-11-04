@@ -3,12 +3,13 @@ import { BagIcon, SearchIcon, UserIcon } from "@/components/icons";
 import { getCart } from "@/lib/cart/get-cart";
 import { getMenuCategories } from "@/lib/catalog/queries";
 import { mainNavFor } from "@/lib/navigation";
+import { hasStoreTikTokVideos } from "@/lib/tiktok/queries";
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 
 export async function SiteHeader() {
-  const [{ itemCount }, menuCategories] = await Promise.all([getCart(), getMenuCategories()]);
-  const mainNav = mainNavFor(menuCategories);
+  const [{ itemCount }, menuCategories, showBloom] = await Promise.all([getCart(), getMenuCategories(), hasStoreTikTokVideos()]);
+  const mainNav = mainNavFor(menuCategories, showBloom);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur">

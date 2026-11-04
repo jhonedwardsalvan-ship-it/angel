@@ -642,30 +642,8 @@
     border: 0;
     height: 1px;
   }
-}
 
-@layer utilities {
-  .container-narrow {
-    width: 100%;
-    max-width: calc(var(--container-narrow) + var(--gutter) * 2);
-    padding-inline: var(--gutter);
-    margin-inline: auto;
-  }
-
-  .container-page {
-    width: 100%;
-    max-width: calc(var(--container-page) + var(--gutter) * 2);
-    padding-inline: var(--gutter);
-    margin-inline: auto;
-  }
-
-  .container-prose {
-    width: 100%;
-    max-width: calc(var(--container-prose) + var(--gutter) * 2);
-    padding-inline: var(--gutter);
-    margin-inline: auto;
-  }
-
+  /* In components (not utilities) so lg:auto-cols-… on a rail can override its column widths. */
   .rail {
     gap: var(--grid-gap);
     scroll-snap-type: x mandatory;
@@ -695,6 +673,29 @@
     .rail {
       grid-auto-columns: calc((100% - var(--grid-gap) * 3) / 4);
     }
+  }
+}
+
+@layer utilities {
+  .container-narrow {
+    width: 100%;
+    max-width: calc(var(--container-narrow) + var(--gutter) * 2);
+    padding-inline: var(--gutter);
+    margin-inline: auto;
+  }
+
+  .container-page {
+    width: 100%;
+    max-width: calc(var(--container-page) + var(--gutter) * 2);
+    padding-inline: var(--gutter);
+    margin-inline: auto;
+  }
+
+  .container-prose {
+    width: 100%;
+    max-width: calc(var(--container-prose) + var(--gutter) * 2);
+    padding-inline: var(--gutter);
+    margin-inline: auto;
   }
 
   .grid-products {

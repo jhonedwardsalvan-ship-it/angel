@@ -1,10 +1,17 @@
 import "server-only";
+import { cache } from "react";
 import { getProductsByIds } from "@/lib/catalog/queries";
 import { connectDB } from "@/lib/db/mongoose";
 import { TikTokConnection } from "@/models/tiktok-connection";
 import { TikTokVideo } from "@/models/tiktok-video";
 import type { Product } from "@/types/catalog";
 import { tiktokConfig } from "./client";
+
+// Values edited by hand in Atlas/Compass can be saved as extended-JSON objects
+// ({"$oid": "…"}, {"$date": "…"}) instead of real ObjectIds and Dates. Accept both.
+const idOf = (v: unknown) =>
+  v == null ? "" : typeof v === "object" && "$oid" in v ? String((v as { $oid: unknown }).$oid) : String(v);
+const dateOf = (v: unknown) => new Date(typeof v === "object" && v !== null && "$date" in v ? (v as { $date: string }).$date : (v as Date));
 
 export type TikTokStatus = {
   configured: boolean;
@@ -55,23 +62,34 @@ export async function listTikTokVideos(): Promise<AdminTikTokVideo[]> {
     videoId: v.videoId,
     title: v.title ?? "",
     shareUrl: v.shareUrl ?? "",
-    postedAt: v.postedAt.toISOString(),
+    postedAt: dateOf(v.postedAt).toISOString(),
     viewCount: v.viewCount ?? 0,
     likeCount: v.likeCount ?? 0,
     commentCount: v.commentCount ?? 0,
     coverImage: v.coverImage ?? "",
     removed: Boolean(v.removedAt),
     hidden: v.hidden,
-    productId: v.product?.toString() ?? "",
+    productId: idOf(v.product),
     sortOrder: v.sortOrder ?? 0,
   }));
 }
+
+/** Whether any video is shown on the store, for the "Bloom" menu link. Cached per request; false if the database is down. */
+export const hasStoreTikTokVideos = cache(async () => {
+  try {
+    await connectDB();
+    return Boolean(await TikTokVideo.exists({ hidden: false, removedAt: null }));
+  } catch {
+    return false;
+  }
+});
 
 export type StoreTikTokVideo = {
   videoId: string;
   title: string;
   shareUrl: string;
   coverImage: string;
+  viewCount: number;
   likeCount: number;
   commentCount: number;
   /** "Shop this" product; null when none is linked or it's no longer for sale. */
@@ -85,7 +103,7 @@ export async function getStoreTikTokVideos(limit = 12): Promise<StoreTikTokVideo
     .sort({ sortOrder: 1, postedAt: -1 })
     .limit(limit)
     .lean();
-  const productIds = rows.flatMap((v) => (v.product ? [v.product.toString()] : []));
+  const productIds = rows.flatMap((v) => (v.product ? [idOf(v.product)] : []));
   const products = productIds.length ? await getProductsByIds(productIds) : [];
   const byId = new Map(products.map((p) => [p.id, p]));
 
@@ -94,8 +112,9 @@ export async function getStoreTikTokVideos(limit = 12): Promise<StoreTikTokVideo
     title: v.title ?? "",
     shareUrl: v.shareUrl ?? "",
     coverImage: v.coverImage ?? "",
+    viewCount: v.viewCount ?? 0,
     likeCount: v.likeCount ?? 0,
     commentCount: v.commentCount ?? 0,
-    product: (v.product && byId.get(v.product.toString())) || null,
+    product: byId.get(idOf(v.product)) ?? null,
   }));
 }

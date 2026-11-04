@@ -1,18 +1,16 @@
 import { Flash } from "@/components/admin/flash";
 import { PageHeader } from "@/components/admin/page-header";
-import { disconnectTikTokAction, saveTikTokVideoAction, syncTikTokAction } from "@/lib/admin/actions/tiktok";
+import { TikTokVideoManager } from "@/components/admin/tiktok-video-manager";
+import { disconnectTikTokAction, syncTikTokAction } from "@/lib/admin/actions/tiktok";
 import { listProducts } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/session";
 import { redirectUri } from "@/lib/tiktok/client";
-import { getTikTokStatus, listTikTokVideos, type AdminTikTokVideo, type TikTokStatus } from "@/lib/tiktok/queries";
+import { getTikTokStatus, listTikTokVideos, type TikTokStatus } from "@/lib/tiktok/queries";
 
 export const metadata = { title: "TikTok" };
 
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric", timeZone: "Asia/Manila" });
 const formatDateTime = (iso: string) =>
   new Date(iso).toLocaleString("en-PH", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" });
-const compact = (n: number) => new Intl.NumberFormat("en", { notation: "compact" }).format(n);
 
 function AccountPanel({ status }: { status: TikTokStatus }) {
   if (!status.configured) {
@@ -86,48 +84,6 @@ function AccountPanel({ status }: { status: TikTokStatus }) {
   );
 }
 
-function VideoRow({ video, products }: { video: AdminTikTokVideo; products: { id: string; name: string }[] }) {
-  return (
-    <li className={`panel grid gap-3 sm:grid-cols-[5rem_minmax(0,1fr)] ${video.hidden || video.removed ? "opacity-80" : ""}`}>
-      <div className="relative aspect-9/16 w-20 overflow-hidden rounded-control bg-surface-strong">
-        {video.coverImage && (
-          // eslint-disable-next-line @next/next/no-img-element -- admin preview
-          <img src={video.coverImage} alt="" className="absolute inset-0 size-full object-cover" />
-        )}
-      </div>
-      <div className="stack min-w-0 gap-2">
-        <div className="stack gap-0.5">
-          <p className="line-clamp-2 text-sm">{video.title || "Untitled video"}</p>
-          <p className="text-xs text-ink-muted">
-            {formatDate(video.postedAt)} · {compact(video.viewCount)} views · {compact(video.likeCount)} likes ·{" "}
-            {compact(video.commentCount)} comments
-            {video.shareUrl && (
-              <>
-                {" · "}
-                <a href={video.shareUrl} target="_blank" rel="noopener noreferrer" className="link">Open on TikTok</a>
-              </>
-            )}
-          </p>
-          {video.removed && <p className="text-xs text-danger">No longer on TikTok, so it isn&apos;t shown on the store.</p>}
-        </div>
-        <form action={saveTikTokVideoAction} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_5rem_auto_auto] sm:items-center">
-          <input type="hidden" name="id" value={video.id} />
-          <select name="productId" defaultValue={video.productId} aria-label="Shop this product" className="input py-2 text-sm">
-            <option value="">No product linked</option>
-            {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          <input type="number" name="sortOrder" defaultValue={video.sortOrder} aria-label="Position" title="Position (lower shows first)" className="input py-2 text-sm" />
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="show" defaultChecked={!video.hidden} className="size-4 accent-primary" />
-            Show on store
-          </label>
-          <button type="submit" className="btn btn-outline btn-sm">Save</button>
-        </form>
-      </div>
-    </li>
-  );
-}
-
 export default async function AdminTikTokPage({ searchParams }: PageProps<"/admin/tiktok">) {
   await requireAdmin("/admin/tiktok");
   const [params, status, videos, products] = await Promise.all([
@@ -141,7 +97,7 @@ export default async function AdminTikTokPage({ searchParams }: PageProps<"/admi
     <div className="max-w-4xl">
       <PageHeader
         title="TikTok"
-        description="Videos from your TikTok account. Tick “Show on store” for the ones to feature on the home page, and link a product for a “Shop this” button."
+        description="Pick videos in “All videos”, then drag them into order in “On store” and link a product for a “Shop this” button. Changes save right away."
       />
       <Flash notice={params.notice} error={params.error} />
       <AccountPanel status={status} />
@@ -149,9 +105,8 @@ export default async function AdminTikTokPage({ searchParams }: PageProps<"/admi
       {videos.length === 0 ? (
         status.account && <p className="panel text-sm text-ink-muted">No videos yet. Press “Sync now” after posting on TikTok.</p>
       ) : (
-        <ul className="stack gap-3">
-          {videos.map((v) => <VideoRow key={v.id} video={v} products={products} />)}
-        </ul>
+        // Keyed so a sync (which reloads the page with new videos) resets the manager's list.
+        <TikTokVideoManager key={`${status.account?.lastSyncAt}-${videos.length}`} videos={videos} products={products} />
       )}
     </div>
   );
