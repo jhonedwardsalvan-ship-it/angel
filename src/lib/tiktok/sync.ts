@@ -41,6 +41,16 @@ async function copyCover(video: TikTokApiVideo) {
   }
 }
 
+/** TikTok's share link, kept only if it really is an https link to tiktok.com (it's rendered as a link on the store). */
+function tiktokLink(url: string | undefined) {
+  try {
+    const u = new URL(url ?? "");
+    return u.protocol === "https:" && (u.hostname === "tiktok.com" || u.hostname.endsWith(".tiktok.com")) ? u.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
 /** Runs `fn` over `items`, `size` at a time. */
 async function inBatches<T>(items: T[], size: number, fn: (item: T) => Promise<unknown>) {
   for (let i = 0; i < items.length; i += size) await Promise.all(items.slice(i, i + size).map(fn));
@@ -70,7 +80,7 @@ export async function syncTikTokVideos(): Promise<SyncResult> {
         {
           $set: {
             title: (v.title || v.video_description || "").slice(0, 300),
-            shareUrl: v.share_url ?? "",
+            shareUrl: tiktokLink(v.share_url),
             postedAt: new Date(v.create_time * 1000),
             viewCount: v.view_count ?? 0,
             likeCount: v.like_count ?? 0,

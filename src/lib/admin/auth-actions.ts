@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { mongoClient } from "@/lib/db/mongo-client";
+import { rateLimit } from "@/lib/rate-limit";
 
 export type AdminSignInState =
   | { error?: string; fieldErrors?: Partial<Record<"email" | "password", string>>; values?: { email?: string } }
@@ -33,6 +34,11 @@ export async function adminSignInAction(_prev: AdminSignInState, formData: FormD
   if (!EMAIL_PATTERN.test(email)) fieldErrors.email = "Enter a valid email address.";
   if (!password) fieldErrors.password = "Enter your password.";
   if (Object.keys(fieldErrors).length) return { fieldErrors, values };
+
+  // Same limits as the customer sign-in, per visitor and per account. Better Auth's
+  // own limiter doesn't see auth.api calls made from server actions.
+  const allowed = (await rateLimit("signIn")) && (await rateLimit("signIn", `email:${email}`));
+  if (!allowed) return { error: "Too many attempts. Please wait a few minutes and try again.", values };
 
   const admin = await mongoClient.db().collection("user").findOne({ email, role: "admin" }, { projection: { _id: 1 } });
   if (!admin) return { error: GENERIC_ERROR, values };

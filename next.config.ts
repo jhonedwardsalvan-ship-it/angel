@@ -13,6 +13,9 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+const cloudinaryPath = cloudName ? `/${cloudName}/**` : "/**";
+
 const nextConfig: NextConfig = {
   // Don't advertise the framework version.
   poweredByHeader: false,
@@ -24,8 +27,10 @@ const nextConfig: NextConfig = {
   images: {
     // Cloudinary uploads and the original Unsplash photos (see IMAGE_HOSTS in src/lib/admin/form.ts).
     remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "images.unsplash.com" },
+      // Only this store's Cloudinary account: any other account's files (e.g. SVGs) could be pushed
+      // through the image optimizer and use up its quota.
+      { protocol: "https", hostname: "res.cloudinary.com", pathname: cloudinaryPath },
+      { protocol: "https", hostname: "images.unsplash.com", pathname: "/photo-**" },
     ],
   },
 };
