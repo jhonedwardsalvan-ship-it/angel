@@ -21,6 +21,9 @@ export async function connectDB(): Promise<typeof mongoose> {
 
   cached.promise ??= mongoose.connect(env.MONGODB_URI, {
     bufferCommands: false,
+    // Each serverless instance opens its own pool; a small cap keeps many
+    // instances under the Atlas connection limit (500 on M0/Flex).
+    maxPoolSize: 10,
   });
 
   try {

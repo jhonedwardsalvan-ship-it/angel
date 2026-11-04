@@ -1,6 +1,8 @@
 import "server-only";
 import type { Types } from "mongoose";
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
+import { CACHE_SECONDS, CACHE_TAGS } from "@/lib/cache-tags";
 import { connectDB } from "@/lib/db/mongoose";
 import { Category as CategoryModel, type CategoryDoc } from "@/models/category";
 import { AddOn as AddOnModel } from "@/models/add-on";
@@ -33,19 +35,19 @@ function toCategory(row: CategoryRow): Category {
 
 type SharedAddOn = AddOn & { appliesTo: string };
 
-/** Active add-ons, loaded once per request. */
-const getActiveAddOns = cache(async (): Promise<SharedAddOn[]> => {
+/** Active add-ons. Cached across requests until an admin changes add-ons. */
+const getActiveAddOns = cache(unstable_cache(async (): Promise<SharedAddOn[]> => {
   await connectDB();
   const rows = await AddOnModel.find({ isActive: true }).sort({ name: 1 }).lean();
   return rows.map((a) => ({ id: a._id.toString(), name: a.name, price: a.price, appliesTo: a.appliesTo ?? "selected" }));
-});
+}, ["active-add-ons"], { tags: [CACHE_TAGS.addOns], revalidate: CACHE_SECONDS }));
 
-/** Active colors, loaded once per request. */
-const getActiveColors = cache(async (): Promise<ColorOption[]> => {
+/** Active colors. Cached across requests until an admin changes colors. */
+const getActiveColors = cache(unstable_cache(async (): Promise<ColorOption[]> => {
   await connectDB();
   const rows = await ColorModel.find({ isActive: true }).sort({ name: 1 }).lean();
   return rows.map((c) => ({ id: c._id.toString(), name: c.name, hex: c.hex }));
-});
+}, ["active-colors"], { tags: [CACHE_TAGS.colors], revalidate: CACHE_SECONDS }));
 
 /** The active colors a product ticked, in name order. */
 function colorsFor(ticked: Types.ObjectId[], all: ColorOption[]): ColorOption[] {
@@ -106,25 +108,30 @@ async function findProducts(
   return rows.flatMap((row) => (row.category ? [toProduct({ ...row, category: row.category }, addOns, colors)] : []));
 }
 
-export async function getCategories(): Promise<Category[]> {
+// Category reads are cached across requests (the header, footer and pages all
+// need them) until an admin changes a category.
+const categoryCache = { tags: [CACHE_TAGS.categories], revalidate: CACHE_SECONDS };
+
+/** Live categories in sort order. */
+export const getCategories = cache(unstable_cache(async (): Promise<Category[]> => {
   await connectDB();
   const rows = await CategoryModel.find(ACTIVE).sort({ sortOrder: 1, name: 1 }).lean<CategoryRow[]>();
   return rows.map(toCategory);
-}
+}, ["categories"], categoryCache));
 
-/** Live categories marked "Show in the main menu", in sort order. Cached per request. */
-export const getMenuCategories = cache(async (): Promise<Category[]> => {
+/** Live categories marked "Show in the main menu", in sort order. */
+export const getMenuCategories = cache(unstable_cache(async (): Promise<Category[]> => {
   await connectDB();
   const rows = await CategoryModel.find({ ...ACTIVE, showInMenu: true }).sort({ sortOrder: 1, name: 1 }).lean<CategoryRow[]>();
   return rows.map(toCategory);
-});
+}, ["menu-categories"], categoryCache));
 
-/** Cached per request so generateMetadata and the page share one query. */
-export const getCategoryBySlug = cache(async (slug: string): Promise<Category | null> => {
+/** Also deduped per request so generateMetadata and the page share one lookup. */
+export const getCategoryBySlug = cache(unstable_cache(async (slug: string): Promise<Category | null> => {
   await connectDB();
   const row = await CategoryModel.findOne({ slug: slug.toLowerCase(), ...ACTIVE }).lean<CategoryRow>();
   return row ? toCategory(row) : null;
-});
+}, ["category-by-slug"], categoryCache));
 
 /** Active products by id, in no particular order. */
 export function getProductsByIds(ids: string[]) {

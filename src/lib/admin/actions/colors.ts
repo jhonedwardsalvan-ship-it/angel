@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { CACHE_TAGS, expireCache } from "@/lib/cache-tags";
 import { connectDB } from "@/lib/db/mongoose";
 import { requireAdmin } from "@/lib/session";
 import { Color } from "@/models/color";
@@ -25,6 +26,7 @@ export async function saveColorAction(formData: FormData) {
   } else {
     await Color.create({ name, hex, isActive: true });
   }
+  expireCache(CACHE_TAGS.colors);
   back("notice", `Saved “${name}”.`);
 }
 
@@ -43,5 +45,6 @@ export async function deleteColorAction(formData: FormData) {
       { strict: false },
     );
   }
+  if (deleted) expireCache(CACHE_TAGS.colors);
   back("notice", deleted ? `Deleted “${deleted.name}”.` : "Color already deleted.");
 }

@@ -2,6 +2,7 @@
 
 import { Types } from "mongoose";
 import { redirect } from "next/navigation";
+import { CACHE_TAGS, expireCache } from "@/lib/cache-tags";
 import { connectDB } from "@/lib/db/mongoose";
 import { requireAdmin } from "@/lib/session";
 import { disconnect } from "@/lib/tiktok/client";
@@ -36,6 +37,7 @@ export async function setTikTokVideoShownAction(id: string, show: boolean): Prom
     update = { hidden: false, sortOrder: (last?.sortOrder ?? -1) + 1 };
   }
   const updated = await TikTokVideo.findByIdAndUpdate(id, update);
+  expireCache(CACHE_TAGS.tiktok);
   return updated ? { ok: true } : gone;
 }
 
@@ -45,6 +47,7 @@ export async function reorderTikTokVideosAction(ids: string[]): Promise<TikTokVi
   if (!Array.isArray(ids) || ids.length > 500 || !ids.every((id) => typeof id === "string" && isObjectId(id))) return gone;
   await connectDB();
   await TikTokVideo.bulkWrite(ids.map((id, i) => ({ updateOne: { filter: { _id: id }, update: { $set: { sortOrder: i } } } })));
+  expireCache(CACHE_TAGS.tiktok);
   return { ok: true };
 }
 
@@ -56,6 +59,7 @@ export async function setTikTokVideoProductAction(id: string, productId: string)
   await connectDB();
   if (productId && !(await Product.exists({ _id: productId }))) return { ok: false, error: "That product no longer exists. Reload the page." };
   const updated = await TikTokVideo.findByIdAndUpdate(id, { product: productId || null });
+  expireCache(CACHE_TAGS.tiktok);
   return updated ? { ok: true } : gone;
 }
 

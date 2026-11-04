@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { CACHE_TAGS, expireCache } from "@/lib/cache-tags";
 import { connectDB } from "@/lib/db/mongoose";
 import { requireAdmin } from "@/lib/session";
 import { AddOn } from "@/models/add-on";
@@ -26,6 +27,7 @@ export async function saveAddOnAction(formData: FormData) {
   } else {
     await AddOn.create({ name, price, appliesTo, isActive: true });
   }
+  expireCache(CACHE_TAGS.addOns);
   back("notice", `Saved “${name}”.`);
 }
 
@@ -35,6 +37,9 @@ export async function deleteAddOnAction(formData: FormData) {
   const id = text(formData, "id", 24);
   await connectDB();
   const deleted = await AddOn.findByIdAndDelete(id);
-  if (deleted) await Product.updateMany({ addOnIds: deleted._id }, { $pull: { addOnIds: deleted._id } });
+  if (deleted) {
+    await Product.updateMany({ addOnIds: deleted._id }, { $pull: { addOnIds: deleted._id } });
+    expireCache(CACHE_TAGS.addOns);
+  }
   back("notice", deleted ? `Deleted “${deleted.name}”.` : "Add-on already deleted.");
 }

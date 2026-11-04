@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { CACHE_TAGS, expireCache } from "@/lib/cache-tags";
 import { connectDB } from "@/lib/db/mongoose";
 import { requireAdmin } from "@/lib/session";
 import { HIGHLIGHT_ICONS, StoreSettings } from "@/models/store-settings";
@@ -46,5 +47,6 @@ export async function saveSettingsAction(_prev: AdminFormState, formData: FormDa
     { upsert: true, runValidators: true },
   );
 
+  expireCache(CACHE_TAGS.settings);
   redirect(`/admin/settings?notice=${encodeURIComponent("Settings saved.")}`);
 }

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { after } from "next/server";
+import { CACHE_TAGS, expireCache } from "@/lib/cache-tags";
 import { connectDB } from "@/lib/db/mongoose";
 import { requireAdmin } from "@/lib/session";
 import { SLUG_PATTERN, slugify } from "@/lib/slug";
@@ -63,6 +64,7 @@ export async function saveCategoryAction(_prev: AdminFormState, formData: FormDa
     throw error;
   }
 
+  expireCache(CACHE_TAGS.categories);
   if (dropped.length) after(() => deleteUnusedImages(dropped));
   redirect(`/admin/categories?notice=${encodeURIComponent(`Saved “${name}”.`)}`);
 }
@@ -77,6 +79,9 @@ export async function deleteCategoryAction(formData: FormData) {
     redirect(`/admin/categories?error=${encodeURIComponent(`Move or delete its ${inUse} product(s) first.`)}`);
   }
   const deleted = await Category.findByIdAndDelete(id);
-  if (deleted) after(() => deleteUnusedImages([deleted.image.src]));
+  if (deleted) {
+    expireCache(CACHE_TAGS.categories);
+    after(() => deleteUnusedImages([deleted.image.src]));
+  }
   redirect(`/admin/categories?notice=${encodeURIComponent(deleted ? `Deleted “${deleted.name}”.` : "Category already deleted.")}`);
 }

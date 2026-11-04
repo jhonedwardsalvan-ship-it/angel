@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { cloudinaryConfig } from "@/lib/admin/cloudinary";
+import { CACHE_TAGS, expireCache } from "@/lib/cache-tags";
 import { connectDB } from "@/lib/db/mongoose";
 import { TikTokConnection } from "@/models/tiktok-connection";
 import { TikTokVideo } from "@/models/tiktok-video";
@@ -90,6 +91,8 @@ export async function syncTikTokVideos(): Promise<SyncResult> {
       );
     }
 
+    // Titles, counts and covers changed; the store shows them on the next visit.
+    expireCache(CACHE_TAGS.tiktok);
     await TikTokConnection.updateOne({ key: "store" }, { lastSyncAt: new Date(), lastSyncError: "" });
     return { ok: true, total: videos.length, added: videos.length - known.size };
   } catch (e) {

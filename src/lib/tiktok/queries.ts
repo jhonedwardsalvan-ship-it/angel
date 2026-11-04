@@ -1,5 +1,7 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
+import { CACHE_SECONDS, CACHE_TAGS } from "@/lib/cache-tags";
 import { getProductsByIds } from "@/lib/catalog/queries";
 import { connectDB } from "@/lib/db/mongoose";
 import { TikTokConnection } from "@/models/tiktok-connection";
@@ -74,15 +76,23 @@ export async function listTikTokVideos(): Promise<AdminTikTokVideo[]> {
   }));
 }
 
-/** Whether any video is shown on the store, for the "Bloom" menu link. Cached per request; false if the database is down. */
+// The shown videos are cached across requests until an admin changes them or a
+// sync runs (both call expireCache(CACHE_TAGS.tiktok)).
+const tiktokCache = { tags: [CACHE_TAGS.tiktok], revalidate: CACHE_SECONDS };
+
+/** Whether any video is shown on the store, for the "Bloom" menu link. False if the database is down. */
 export const hasStoreTikTokVideos = cache(async () => {
   try {
-    await connectDB();
-    return Boolean(await TikTokVideo.exists({ hidden: false, removedAt: null }));
+    return await hasShownVideos();
   } catch {
     return false;
   }
 });
+
+const hasShownVideos = unstable_cache(async () => {
+  await connectDB();
+  return Boolean(await TikTokVideo.exists({ hidden: false, removedAt: null }));
+}, ["tiktok-has-shown"], tiktokCache);
 
 export type StoreTikTokVideo = {
   videoId: string;
@@ -96,17 +106,13 @@ export type StoreTikTokVideo = {
   product: Product | null;
 };
 
-/** Videos the admin chose to show, in their order, with their linked products. */
-export async function getStoreTikTokVideos(limit = 12): Promise<StoreTikTokVideo[]> {
+/** The shown videos as plain rows (cacheable), with the linked product's id. */
+const getShownVideoRows = unstable_cache(async (limit: number) => {
   await connectDB();
   const rows = await TikTokVideo.find({ hidden: false, removedAt: null })
     .sort({ sortOrder: 1, postedAt: -1 })
     .limit(limit)
     .lean();
-  const productIds = rows.flatMap((v) => (v.product ? [idOf(v.product)] : []));
-  const products = productIds.length ? await getProductsByIds(productIds) : [];
-  const byId = new Map(products.map((p) => [p.id, p]));
-
   return rows.map((v) => ({
     videoId: v.videoId,
     title: v.title ?? "",
@@ -115,6 +121,15 @@ export async function getStoreTikTokVideos(limit = 12): Promise<StoreTikTokVideo
     viewCount: v.viewCount ?? 0,
     likeCount: v.likeCount ?? 0,
     commentCount: v.commentCount ?? 0,
-    product: byId.get(idOf(v.product)) ?? null,
+    productId: idOf(v.product),
   }));
+}, ["tiktok-shown-videos"], tiktokCache);
+
+/** Videos the admin chose to show, in their order, with their linked products (loaded live for current price and stock). */
+export async function getStoreTikTokVideos(limit = 12): Promise<StoreTikTokVideo[]> {
+  const rows = await getShownVideoRows(limit);
+  const productIds = rows.flatMap((v) => (v.productId ? [v.productId] : []));
+  const products = productIds.length ? await getProductsByIds(productIds) : [];
+  const byId = new Map(products.map((p) => [p.id, p]));
+  return rows.map(({ productId, ...v }) => ({ ...v, product: byId.get(productId) ?? null }));
 }

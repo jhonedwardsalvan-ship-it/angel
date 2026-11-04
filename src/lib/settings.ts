@@ -1,5 +1,7 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
+import { CACHE_SECONDS, CACHE_TAGS } from "@/lib/cache-tags";
 import { connectDB } from "@/lib/db/mongoose";
 import { formatPrice } from "@/lib/format";
 import { StoreSettings as StoreSettingsModel, type HIGHLIGHT_ICONS } from "@/models/store-settings";
@@ -24,8 +26,8 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   ],
 };
 
-/** Store settings with defaults filled in. Cached per request. */
-export const getStoreSettings = cache(async (): Promise<StoreSettings> => {
+/** Store settings with defaults filled in. Cached across requests until an admin saves the settings page. */
+export const getStoreSettings = cache(unstable_cache(async (): Promise<StoreSettings> => {
   await connectDB();
   const doc = await StoreSettingsModel.findOne({ key: "store" }).lean();
   if (!doc) return DEFAULT_SETTINGS;
@@ -39,7 +41,7 @@ export const getStoreSettings = cache(async (): Promise<StoreSettings> => {
       body: body ?? "",
     })),
   };
-});
+}, ["store-settings"], { tags: [CACHE_TAGS.settings], revalidate: CACHE_SECONDS }));
 
 /** Replaces {deliveryFee}, {freeDeliveryMin} and {leadDays} in admin-written text with current values. */
 export function fillSettingsTokens(text: string, settings: StoreSettings) {
