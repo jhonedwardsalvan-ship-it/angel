@@ -5,17 +5,21 @@ import { Newsletter } from "@/components/home/newsletter";
 import { OccasionRail } from "@/components/home/occasion-rail";
 import { ProductSection } from "@/components/home/product-section";
 import { ServicePromises } from "@/components/home/service-promises";
+import { TikTokSection } from "@/components/home/tiktok-section";
 import { getCategories, getFeaturedProducts, getNewArrivals } from "@/lib/catalog/queries";
 import { heroImage, occasions, storyImage } from "@/lib/content/home";
+import { getStoreTikTokVideos } from "@/lib/tiktok/queries";
 
 // Render per request so stock and catalog changes show up immediately.
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [categories, featured, newArrivals] = await Promise.all([
+  const [categories, featured, newArrivals, tiktokVideos] = await Promise.all([
     getCategories(),
     getFeaturedProducts(),
     getNewArrivals(),
+    // A TikTok problem shouldn't take the home page down; the section just hides.
+    getStoreTikTokVideos().catch(() => []),
   ]);
 
   return (
@@ -33,6 +37,7 @@ export default async function Home() {
       />
       <OccasionRail occasions={occasions} />
       <EditorialSplit image={storyImage} />
+      <TikTokSection videos={tiktokVideos} />
       <ProductSection
         id="new-arrivals-title"
         eyebrow="Just in"

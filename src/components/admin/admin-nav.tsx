@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/admin/inventory", label: "Inventory" },
   { href: "/admin/add-ons", label: "Add-ons" },
   { href: "/admin/colors", label: "Colors" },
+  { href: "/admin/tiktok", label: "TikTok" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

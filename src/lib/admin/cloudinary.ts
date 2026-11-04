@@ -9,7 +9,7 @@ import { Product } from "@/models/product";
 // files in this account's angel/ folder are touched, and only when no product,
 // category or past order (orders keep their product photo) still shows them.
 
-function config() {
+export function cloudinaryConfig() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
@@ -40,7 +40,7 @@ async function stillUsed(url: string) {
   return Boolean(product || category || order);
 }
 
-async function destroy(publicId: string, { cloudName, apiKey, apiSecret }: NonNullable<ReturnType<typeof config>>) {
+async function destroy(publicId: string, { cloudName, apiKey, apiSecret }: NonNullable<ReturnType<typeof cloudinaryConfig>>) {
   const timestamp = Math.floor(Date.now() / 1000);
   const signature = createHash("sha1").update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`).digest("hex");
   const body = new URLSearchParams({ public_id: publicId, timestamp: String(timestamp), api_key: apiKey, signature });
@@ -57,7 +57,7 @@ async function destroy(publicId: string, { cloudName, apiKey, apiSecret }: NonNu
  * only logged, since a leftover file is harmless.
  */
 export async function deleteUnusedImages(urls: string[]) {
-  const cfg = config();
+  const cfg = cloudinaryConfig();
   if (!cfg) return;
   await connectDB();
   for (const url of new Set(urls)) {

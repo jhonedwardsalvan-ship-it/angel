@@ -111,6 +111,12 @@ export const TikTokIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const PlayIcon = (p: IconProps) => (
+  <Icon fill="currentColor" stroke="none" {...p}>
+    <path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.1-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" />
+  </Icon>
+);
+
 /** Icons admins can pick for store highlights (Admin → Settings). */
 export const highlightIcons = {
   truck: TruckIcon,
