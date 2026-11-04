@@ -15,9 +15,12 @@ export const STATE_COOKIE = "tiktok_oauth_state";
 /** Thrown when TikTok rejects the saved login; the admin has to reconnect. */
 export class TikTokAuthError extends Error {}
 
+/** Env value without surrounding spaces or quotes (easy to paste into Vercel by mistake). */
+const cleanEnv = (name: string) => process.env[name]?.trim().replace(/^(["'])(.*)\1$/, "$2").trim();
+
 export function tiktokConfig() {
-  const clientKey = process.env.TIKTOK_CLIENT_KEY;
-  const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+  const clientKey = cleanEnv("TIKTOK_CLIENT_KEY");
+  const clientSecret = cleanEnv("TIKTOK_CLIENT_SECRET");
   return clientKey && clientSecret ? { clientKey, clientSecret } : null;
 }
 
