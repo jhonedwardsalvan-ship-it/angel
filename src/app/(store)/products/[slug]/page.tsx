@@ -10,6 +10,7 @@ import { StockStatus } from "@/components/product/stock-status";
 import { formatPrice } from "@/lib/format";
 import { getProductBySlug, getRelatedProducts } from "@/lib/catalog/queries";
 import { fillSettingsTokens, getStoreSettings } from "@/lib/settings";
+import { SITE } from "@/lib/site";
 
 // Render per request so price and stock are always current.
 export const dynamic = "force-dynamic";
@@ -19,11 +20,39 @@ export async function generateMetadata({
 }: PageProps<"/products/[slug]">): Promise<Metadata> {
   const product = await getProductBySlug((await params).slug);
   if (!product) return {};
+  const description =
+    product.description.trim() || `${formatPrice(product.price)} · Handcrafted by ${SITE.name}. Order online.`;
+  const image = product.images[0];
   return {
     title: `${product.name} · AL`,
-    description: product.description,
-    openGraph: { images: [product.images[0].src] },
+    description,
+    alternates: { canonical: `/products/${product.slug}` },
+    // A child's openGraph replaces the root layout's, so the shared fields are repeated here.
+    openGraph: {
+      type: "website",
+      siteName: SITE.name,
+      locale: "en_PH",
+      url: `/products/${product.slug}`,
+      title: product.name,
+      description,
+      images: [{ ...shareImage(image.src), alt: image.alt }],
+    },
+    other: {
+      "product:price:amount": String(product.price),
+      "product:price:currency": "PHP",
+    },
   };
+}
+
+/**
+ * Link previews (Messenger, WhatsApp, Viber) want a small landscape JPEG with known
+ * dimensions; WhatsApp drops images over ~600 KB. Cloudinary crops and compresses
+ * on the fly; other hosts are passed through as-is.
+ */
+function shareImage(src: string) {
+  return src.startsWith("https://res.cloudinary.com/")
+    ? { url: src.replace("/image/upload/", "/image/upload/c_fill,g_auto,w_1200,h_630,f_jpg,q_auto/"), width: 1200, height: 630 }
+    : { url: src };
 }
 
 export default async function ProductPage({ params }: PageProps<"/products/[slug]">) {
