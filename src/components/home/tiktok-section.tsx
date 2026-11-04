@@ -16,7 +16,7 @@ export function TikTokSection({ videos }: { videos: StoreTikTokVideo[] }) {
         <ul className="rail -mx-(--gutter) px-(--gutter) scroll-px-(--gutter) md:mx-0 md:px-0 md:scroll-px-0">
           {videos.map((v) => (
             <li key={v.videoId} className="stack gap-3">
-              <div className="media aspect-[9/16]">
+              <div className="media aspect-9/16">
                 <TikTokPlayer videoId={v.videoId} title={v.title} coverImage={v.coverImage} />
               </div>
               {v.product ? (

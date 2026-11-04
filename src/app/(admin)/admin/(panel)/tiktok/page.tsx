@@ -24,6 +24,12 @@ function AccountPanel({ status }: { status: TikTokStatus }) {
           Add this redirect URI to the app:
         </p>
         <code className="rounded-control bg-surface px-2 py-1 break-all">{redirectUri()}</code>
+        {!redirectUri().startsWith("https://") && (
+          <p className="text-danger">
+            TikTok only accepts https addresses. This shows your local address because BETTER_AUTH_URL isn&apos;t https here;
+            register your live site&apos;s address instead, e.g. https://www.your-domain/api/tiktok/callback.
+          </p>
+        )}
         <p className="text-ink-muted">Then add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET to the environment variables and redeploy.</p>
       </section>
     );
@@ -76,7 +82,7 @@ function AccountPanel({ status }: { status: TikTokStatus }) {
 function VideoRow({ video, products }: { video: AdminTikTokVideo; products: { id: string; name: string }[] }) {
   return (
     <li className={`panel grid gap-3 sm:grid-cols-[5rem_minmax(0,1fr)] ${video.hidden || video.removed ? "opacity-80" : ""}`}>
-      <div className="relative aspect-[9/16] w-20 overflow-hidden rounded-control bg-surface-strong">
+      <div className="relative aspect-9/16 w-20 overflow-hidden rounded-control bg-surface-strong">
         {video.coverImage && (
           // eslint-disable-next-line @next/next/no-img-element -- admin preview
           <img src={video.coverImage} alt="" className="absolute inset-0 size-full object-cover" />
@@ -134,7 +140,7 @@ export default async function AdminTikTokPage({ searchParams }: PageProps<"/admi
       <AccountPanel status={status} />
 
       {videos.length === 0 ? (
-        <p className="panel text-sm text-ink-muted">No videos yet. Connect your account, or press “Sync now”.</p>
+        status.account && <p className="panel text-sm text-ink-muted">No videos yet. Press “Sync now” after posting on TikTok.</p>
       ) : (
         <ul className="stack gap-3">
           {videos.map((v) => <VideoRow key={v.id} video={v} products={products} />)}
