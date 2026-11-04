@@ -8,6 +8,8 @@ import { tiktokConfig } from "./client";
 
 export type TikTokStatus = {
   configured: boolean;
+  /** Public (it's in TikTok's login URL); shown so the admin can compare it with the TikTok portal. */
+  clientKey: string;
   account: { displayName: string; avatarUrl: string; lastSyncAt: string | null; lastSyncError: string; expired: boolean } | null;
 };
 
@@ -17,6 +19,7 @@ export async function getTikTokStatus(): Promise<TikTokStatus> {
   const conn = await TikTokConnection.findOne({ key: "store" }, { accessToken: 0, refreshToken: 0 }).lean();
   return {
     configured: tiktokConfig() !== null,
+    clientKey: tiktokConfig()?.clientKey ?? "",
     account: conn && {
       displayName: conn.displayName ?? "",
       avatarUrl: conn.avatarUrl ?? "",

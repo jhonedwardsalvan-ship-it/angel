@@ -43,6 +43,13 @@ function AccountPanel({ status }: { status: TikTokStatus }) {
         <p className="text-ink-muted">The store reads your public videos once a day. Nothing is posted to TikTok.</p>
         {/* A plain link: the connect route redirects to TikTok's login page. */}
         <a href="/api/tiktok/connect" className="btn btn-primary btn-sm self-start">Connect TikTok</a>
+        {/* For checking against the TikTok portal. Both are public: TikTok's login URL shows them anyway. */}
+        <dl className="grid gap-1 text-xs text-ink-muted sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-x-3">
+          <dt>Client key in use</dt>
+          <dd><code className="break-all">{status.clientKey}</code> ({status.clientKey.length} characters)</dd>
+          <dt>Redirect URI</dt>
+          <dd><code className="break-all">{redirectUri()}</code></dd>
+        </dl>
       </section>
     );
   }
