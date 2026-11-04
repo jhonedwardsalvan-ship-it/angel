@@ -813,3 +813,51 @@
     40% { opacity: 1; transform: translateY(-0.2em); }
   }
 }
+
+/* Storefront motion. Everything sits behind no-preference, so reduced-motion
+   users get the static page. Fills are "backwards" only: no transform is left
+   behind once an animation ends, which would trap fixed-position children. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Each page fades in on navigation (src/app/(store)/template.tsx). */
+  .page-enter {
+    animation: fade-in .5s var(--ease-standard) backwards;
+  }
+
+  /* Hero: the copy rises in one line after another; the photo settles from a
+     slight zoom, without fading so it still counts as painted for LCP. */
+  .hero-copy > * {
+    animation: rise-in .9s var(--ease-standard) backwards;
+  }
+  .hero-copy > :nth-child(2) { animation-delay: .1s; }
+  .hero-copy > :nth-child(3) { animation-delay: .2s; }
+  .hero-copy > :nth-child(4) { animation-delay: .3s; }
+
+  .hero-photo img {
+    animation: settle 1.6s var(--ease-standard) backwards;
+  }
+  .hero-backdrop {
+    animation: fade-in .9s var(--ease-standard) .4s backwards;
+  }
+
+  /* Section content rises into view while scrolling. Browsers without
+     scroll-driven animations simply show it. */
+  @supports (animation-timeline: view()) {
+    main .section > * {
+      animation: rise-in linear backwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 12rem;
+    }
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(1.25rem); }
+}
+
+@keyframes settle {
+  from { transform: scale(1.08); }
+}

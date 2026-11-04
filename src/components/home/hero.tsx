@@ -15,10 +15,10 @@ export function Hero({ image }: { image: CatalogImage }) {
   return (
     <section className="overflow-hidden bg-surface">
       <div className="container-page grid items-center gap-8 py-8 md:grid-cols-12 md:gap-8 md:py-16 lg:py-20">
-        {/* The arch: a window/vase silhouette, with a lavender arch offset behind it for depth. */}
+        {/* The petal: two opposite corners rounded, with a lavender petal offset behind it for depth. */}
         <div className="relative mx-auto w-full max-w-68 md:order-last md:col-span-5 md:col-start-8 md:max-w-none">
-          <div aria-hidden="true" className="absolute inset-0 translate-x-3 translate-y-3 rounded-t-full rounded-b-media bg-accent md:translate-x-5 md:translate-y-5" />
-          <div className="relative aspect-[5/6] overflow-hidden rounded-t-full rounded-b-media md:aspect-[4/5]">
+          <div aria-hidden="true" className="hero-backdrop absolute inset-0 translate-x-3 translate-y-3 rounded-tl-[50%] rounded-br-[50%] bg-accent md:translate-x-5 md:translate-y-5" />
+          <div className="hero-photo relative aspect-[5/6] overflow-hidden rounded-tl-[50%] rounded-br-[50%] md:aspect-[4/5]">
             <Image
               src={image.src}
               alt={image.alt}
@@ -30,7 +30,7 @@ export function Hero({ image }: { image: CatalogImage }) {
           </div>
         </div>
 
-        <div className="stack items-start gap-6 md:col-span-7 md:pr-6">
+        <div className="hero-copy stack items-start gap-6 md:col-span-7 md:pr-6">
           <h1 className="text-[clamp(2.75rem,1.9rem+3.6vw,5rem)] leading-[1.02] font-light tracking-[-0.025em]">
             Flowers that say it better than words
           </h1>
@@ -49,7 +49,7 @@ export function Hero({ image }: { image: CatalogImage }) {
 
           <div className="stack mt-4 gap-3 border-t border-line pt-6 md:mt-6">
             <p className="text-sm text-ink-muted">Follow our latest work</p>
-            <ul className="flex flex-wrap gap-2">
+            <ul className="flex gap-2">
               {SITE.socials.map((s) => {
                 const Icon = socialIcons[s.label];
                 return (
@@ -58,11 +58,11 @@ export function Hero({ image }: { image: CatalogImage }) {
                       href={s.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative flex min-h-11 items-center gap-2 rounded-pill border border-line-strong bg-canvas px-4 text-sm text-ink transition-colors hover:border-ink hover:bg-ink hover:text-ink-inverse"
+                      title={s.label}
+                      className="flex size-11 items-center justify-center rounded-full border border-line-strong bg-canvas text-ink transition-colors hover:border-ink hover:bg-ink hover:text-ink-inverse"
                     >
-                      {Icon && <Icon width={18} height={18} />}
-                      {s.label}
-                      <span className="sr-only"> (opens in a new tab)</span>
+                      {Icon && <Icon aria-hidden="true" width={18} height={18} />}
+                      <span className="sr-only">{s.label} (opens in a new tab)</span>
                     </a>
                   </li>
                 );
