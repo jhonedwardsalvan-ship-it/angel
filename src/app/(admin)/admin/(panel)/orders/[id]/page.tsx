@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Flash } from "@/components/admin/flash";
+import { CopyOrderNumberButton } from "@/components/admin/copy-order-number-button";
+import { PrintReceiptButton } from "@/components/admin/print-receipt-button";
 import { ORDER_STATUS_LABELS, OrderStatusPill } from "@/components/admin/order-status-pill";
 import { PageHeader } from "@/components/admin/page-header";
 import { OrderSummary } from "@/components/cart/order-summary";
@@ -15,6 +17,7 @@ import { formatPrice } from "@/lib/format";
 import { requireAdmin } from "@/lib/session";
 import { COURIERS, courierLabel } from "@/lib/orders/couriers";
 import { ORDER_TRANSITIONS } from "@/lib/orders/status";
+import { SITE } from "@/lib/site";
 
 export const metadata = { title: "Order" };
 
@@ -59,9 +62,9 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
     <>
       <Breadcrumbs items={[{ label: "Orders", href: "/admin/orders" }, { label: order.number }]} />
       <PageHeader
-        title={`Order ${order.number}`}
+        title={<span className="flex flex-wrap items-center gap-3">Order {order.number}<CopyOrderNumberButton orderNumber={order.number} /></span>}
         description={`Placed ${dateTime.format(new Date(order.createdAt))}`}
-        actions={<OrderStatusPill status={order.status} />}
+        actions={<div className="flex items-center gap-3"><OrderStatusPill status={order.status} />{order.status === "delivered" && <PrintReceiptButton />}</div>}
       />
       <Flash notice={query.notice} error={query.error} />
 
@@ -166,6 +169,44 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
           <OrderSummary subtotal={order.subtotal} deliveryFee={order.deliveryFee} total={order.total} />
         </div>
       </div>
+      {order.status === "delivered" && (
+        <article className="receipt-print" aria-label="Order receipt">
+          <header className="receipt-header">
+            <p className="receipt-brand">{SITE.name}</p>
+            <p>{SITE.phone}</p>
+            <h1>Order receipt</h1>
+            <p>Order {order.number}</p>
+            <p>Placed {dateTime.format(new Date(order.createdAt))}</p>
+          </header>
+          <section>
+            <h2>Customer &amp; delivery</h2>
+            <p>Customer: {order.customerName} · {order.customerPhone}</p>
+            <p>Recipient: {order.delivery.recipientName}</p>
+            <p>{order.delivery.date} · {DELIVERY_SLOTS[order.delivery.slot as keyof typeof DELIVERY_SLOTS] ?? order.delivery.slot}</p>
+            <p>{order.delivery.address}, {order.delivery.city}</p>
+            <p>Payment: {PAYMENT_METHODS[order.paymentMethod]}</p>
+          </section>
+          <section>
+            <h2>Items</h2>
+            <table>
+              <thead><tr><th>Item</th><th>Qty</th><th>Amount</th></tr></thead>
+              <tbody>{order.items.map((item, n) => (
+                <tr key={`${item.productId}-${n}`}>
+                  <td>{item.name}{item.options.length > 0 && <small>{item.options.join(" · ")}</small>}</td>
+                  <td>{item.quantity}</td>
+                  <td>{formatPrice(item.lineTotal)}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+            <dl className="receipt-totals">
+              <div><dt>Subtotal</dt><dd>{formatPrice(order.subtotal)}</dd></div>
+              <div><dt>Delivery</dt><dd>{formatPrice(order.deliveryFee)}</dd></div>
+              <div className="receipt-total"><dt>Total</dt><dd>{formatPrice(order.total)}</dd></div>
+            </dl>
+          </section>
+          <p className="receipt-thanks">Thank you for your order.</p>
+        </article>
+      )}
     </>
   );
 }

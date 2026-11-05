@@ -861,3 +861,36 @@
 @keyframes settle {
   from { transform: scale(1.08); }
 }
+
+.receipt-print {
+  display: none;
+}
+
+@media print {
+  @page { margin: 16mm; }
+
+  body * { visibility: hidden !important; }
+  .receipt-print, .receipt-print * { visibility: visible !important; }
+  .receipt-print {
+    display: block;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    color: #222;
+    font: 12pt/1.5 Arial, sans-serif;
+  }
+  .receipt-header { text-align: center; margin-bottom: 2rem; }
+  .receipt-header h1 { margin: 1rem 0 .25rem; font-size: 22pt; }
+  .receipt-brand { font-size: 18pt; font-weight: 700; }
+  .receipt-print section { margin: 1.5rem 0; }
+  .receipt-print h2 { margin-bottom: .5rem; font-size: 14pt; font-weight: 700; }
+  .receipt-print table { width: 100%; border-collapse: collapse; }
+  .receipt-print th, .receipt-print td { padding: .5rem .25rem; border-bottom: 1px solid #ccc; text-align: left; }
+  .receipt-print th:nth-child(n+2), .receipt-print td:nth-child(n+2) { text-align: right; }
+  .receipt-print small { display: block; color: #555; }
+  .receipt-totals { width: 52%; margin: 1rem 0 0 auto; }
+  .receipt-totals div { display: flex; justify-content: space-between; padding: .25rem 0; }
+  .receipt-totals dd { margin: 0; }
+  .receipt-total { border-top: 1px solid #222; font-weight: 700; }
+  .receipt-thanks { margin-top: 3rem; text-align: center; }
+}
