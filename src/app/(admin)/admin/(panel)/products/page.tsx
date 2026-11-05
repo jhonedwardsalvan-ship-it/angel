@@ -2,11 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { Flash } from "@/components/admin/flash";
 import { PageHeader } from "@/components/admin/page-header";
+import { Pagination } from "@/components/admin/pagination";
 import { setProductActiveAction } from "@/lib/admin/actions/products";
 import { listProducts, type ProductFilter } from "@/lib/admin/queries";
 import { getStockState } from "@/lib/catalog/stock";
 import { formatPrice } from "@/lib/format";
 import { requireAdmin } from "@/lib/session";
+import { readPage, readPageSize } from "@/lib/admin/pagination";
 
 export const metadata = { title: "Products" };
 
@@ -25,14 +27,18 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.slice(0, 100) : "";
   const status = FILTERS.find((f) => f.value === params.status)?.value ?? "";
-  const products = await listProducts({ q, status });
-  const href = (s: string) => `/admin/products?${new URLSearchParams({ ...(q && { q }), ...(s && { status: s }) })}`;
+  const allProducts = await listProducts({ q, status });
+  const pageSize = readPageSize(params.limit);
+  const pages = Math.max(1, Math.ceil(allProducts.length / pageSize));
+  const page = Math.min(pages, readPage(params.page));
+  const products = allProducts.slice((page - 1) * pageSize, page * pageSize);
+  const href = (s: string, p?: number) => `/admin/products?${new URLSearchParams({ ...(q && { q }), ...(s && { status: s }), ...(pageSize !== 20 && { limit: String(pageSize) }), ...(p && p > 1 && { page: String(p) }) })}`;
 
   return (
     <>
       <PageHeader
         title="Products"
-        description={`${products.length} shown`}
+        description={`${allProducts.length} matching`}
         actions={<Link href="/admin/products/new" className="btn btn-primary btn-sm">New product</Link>}
       />
       <Flash notice={params.notice} error={params.error} />
@@ -49,6 +55,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
         </ul>
         <form action="/admin/products" className="flex gap-2" role="search">
           {status && <input type="hidden" name="status" value={status} />}
+          {pageSize !== 20 && <input type="hidden" name="limit" value={pageSize} />}
           <label htmlFor="admin-q" className="sr-only">Search products</label>
           <input id="admin-q" name="q" type="search" defaultValue={q} placeholder="Search by name" className="input min-h-10 py-2 text-sm md:w-64" />
           <button type="submit" className="btn btn-outline btn-sm">Search</button>
@@ -113,6 +120,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           </table>
         </div>
       )}
+      <Pagination page={page} pages={pages} limit={pageSize} href={(p) => href(status, p)} />
     </>
   );
 }

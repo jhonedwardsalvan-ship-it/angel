@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ORDER_STATUS_LABELS, OrderStatusPill } from "@/components/admin/order-status-pill";
 import { PageHeader } from "@/components/admin/page-header";
+import { Pagination } from "@/components/admin/pagination";
 import { listOrders } from "@/lib/admin/queries";
 import { formatPrice } from "@/lib/format";
 import { requireAdmin } from "@/lib/session";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/orders/status";
+import { readPage, readPageSize } from "@/lib/admin/pagination";
 
 export const metadata = { title: "Orders" };
 
@@ -14,10 +16,11 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
   await requireAdmin("/admin/orders");
   const params = await searchParams;
   const status = ORDER_STATUSES.find((s) => s === params.status) as OrderStatus | undefined;
-  const page = Math.max(1, Number.parseInt(String(params.page ?? "1"), 10) || 1);
-  const { orders, total, pages } = await listOrders({ status, page });
+  const page = readPage(params.page);
+  const pageSize = readPageSize(params.limit);
+  const { orders, total, pages } = await listOrders({ status, page, pageSize });
   const href = (s?: string, p = 1) =>
-    `/admin/orders?${new URLSearchParams({ ...(s && { status: s }), ...(p > 1 && { page: String(p) }) })}`;
+    `/admin/orders?${new URLSearchParams({ ...(s && { status: s }), ...(pageSize !== 20 && { limit: String(pageSize) }), ...(p > 1 && { page: String(p) }) })}`;
 
   return (
     <>
@@ -74,13 +77,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
         </div>
       )}
 
-      {pages > 1 && (
-        <nav aria-label="Pagination" className="mt-6 flex items-center justify-between text-sm">
-          {page > 1 ? <Link href={href(status, page - 1)} className="btn btn-outline btn-sm">Previous</Link> : <span />}
-          <span className="text-ink-muted">Page {page} of {pages}</span>
-          {page < pages ? <Link href={href(status, page + 1)} className="btn btn-outline btn-sm">Next</Link> : <span />}
-        </nav>
-      )}
+      <Pagination page={Math.min(page, pages)} pages={pages} limit={pageSize} href={(p) => href(status, p)} />
     </>
   );
 }

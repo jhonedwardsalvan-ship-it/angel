@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/admin/page-header";
+import { Pagination } from "@/components/admin/pagination";
 import { StockForm } from "@/components/admin/stock-form";
 import { getRecentStockAdjustments, listProducts } from "@/lib/admin/queries";
 import { getStockState, LOW_STOCK_THRESHOLD } from "@/lib/catalog/stock";
 import { requireAdmin } from "@/lib/session";
+import { readPage, readPageSize } from "@/lib/admin/pagination";
 
 export const metadata = { title: "Inventory" };
 
@@ -29,11 +31,14 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.slice(0, 100) : "";
   const filter = FILTERS.find((f) => f.value === params.filter)?.value ?? "";
+  const productPage = readPage(params.productPage);
+  const historyPage = readPage(params.historyPage);
+  const pageSize = readPageSize(params.limit);
   const [products, history] = await Promise.all([
     listProducts({ q, status: filter }),
-    getRecentStockAdjustments(25),
+    getRecentStockAdjustments(historyPage, pageSize),
   ]);
-  const href = (f: string) => `/admin/inventory?${new URLSearchParams({ ...(q && { q }), ...(f && { filter: f }) })}`;
+  const href = (f: string) => `/admin/inventory?${new URLSearchParams({ ...(q && { q }), ...(f && { filter: f }), ...(pageSize !== 20 && { limit: String(pageSize) }) })}`;
 
   return (
     <>
@@ -52,6 +57,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
         </ul>
         <form action="/admin/inventory" className="flex gap-2" role="search">
           {filter && <input type="hidden" name="filter" value={filter} />}
+          {pageSize !== 20 && <input type="hidden" name="limit" value={pageSize} />}
           <label htmlFor="inv-q" className="sr-only">Search products</label>
           <input id="inv-q" name="q" type="search" defaultValue={q} placeholder="Search by name" className="input min-h-10 py-2 text-sm md:w-64" />
           <button type="submit" className="btn btn-outline btn-sm">Search</button>
@@ -67,7 +73,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
               <tr><th>Product</th><th className="num">In stock</th><th>Update</th></tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {products.slice((productPage - 1) * pageSize, productPage * pageSize).map((p) => (
                 <tr key={p.id} className={p.isActive ? "" : "text-ink-muted"}>
                   <td className="min-w-48">
                     <Link href={`/admin/products/${p.id}`} className="font-medium text-ink hover:underline">{p.name}</Link>
@@ -81,10 +87,16 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
           </table>
         </div>
       )}
+      <Pagination
+        page={Math.min(Math.max(1, Math.ceil(products.length / pageSize)), productPage)}
+        pages={Math.max(1, Math.ceil(products.length / pageSize))}
+        limit={pageSize}
+        href={(p) => `/admin/inventory?${new URLSearchParams({ ...(q && { q }), ...(filter && { filter }), ...(pageSize !== 20 && { limit: String(pageSize) }), productPage: String(p) })}`}
+      />
 
       <section aria-labelledby="history-title" className="mt-10 stack gap-4">
         <h2 id="history-title" className="text-h4">Recent stock changes</h2>
-        {history.length === 0 ? (
+        {history.adjustments.length === 0 ? (
           <p className="panel text-sm text-ink-muted">No changes yet.</p>
         ) : (
           <div className="table-wrap">
@@ -93,7 +105,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
                 <tr><th>When</th><th>Product</th><th>Reason</th><th className="num">Change</th><th className="num">Stock</th><th>Note</th></tr>
               </thead>
               <tbody>
-                {history.map((h) => (
+                {history.adjustments.map((h) => (
                   <tr key={h.id}>
                     <td className="whitespace-nowrap text-ink-muted">{dateTime.format(new Date(h.createdAt))}</td>
                     <td>{h.productName}</td>
@@ -107,6 +119,13 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
             </table>
           </div>
         )}
+        <Pagination
+          page={Math.min(history.pages, historyPage)}
+          pages={history.pages}
+          limit={pageSize}
+          showPageSize={false}
+          href={(p) => `/admin/inventory?${new URLSearchParams({ ...(q && { q }), ...(filter && { filter }), ...(pageSize !== 20 && { limit: String(pageSize) }), historyPage: String(p) })}`}
+        />
       </section>
     </>
   );

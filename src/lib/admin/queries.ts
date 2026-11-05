@@ -146,20 +146,20 @@ function toOrderRow(o: OrderRow): AdminOrderRow {
   };
 }
 
-export const ORDERS_PAGE_SIZE = 25;
+export const ORDERS_PAGE_SIZE = 20;
 
-export async function listOrders({ status, page = 1 }: { status?: OrderStatus; page?: number } = {}) {
+export async function listOrders({ status, page = 1, pageSize = ORDERS_PAGE_SIZE }: { status?: OrderStatus; page?: number; pageSize?: number } = {}) {
   await connectDB();
   const filter = status ? { status } : {};
   const [rows, total] = await Promise.all([
     Order.find(filter)
       .sort({ createdAt: -1, _id: -1 })
-      .skip((page - 1) * ORDERS_PAGE_SIZE)
-      .limit(ORDERS_PAGE_SIZE)
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
       .lean<OrderRow[]>(),
     Order.countDocuments(filter),
   ]);
-  return { orders: rows.map(toOrderRow), total, pages: Math.max(1, Math.ceil(total / ORDERS_PAGE_SIZE)) };
+  return { orders: rows.map(toOrderRow), total, pages: Math.max(1, Math.ceil(total / pageSize)) };
 }
 
 export async function getOrder(id: string): Promise<AdminOrder | null> {
@@ -195,15 +195,19 @@ export async function getOrder(id: string): Promise<AdminOrder | null> {
   };
 }
 
-export async function getRecentStockAdjustments(limit = 20, productId?: string): Promise<StockAdjustmentRow[]> {
+export async function getRecentStockAdjustments(page = 1, pageSize = 20, productId?: string) {
   await connectDB();
   const filter = productId && isObjectId(productId) ? { product: productId } : {};
-  const rows = await StockAdjustment.find(filter)
-    .sort({ createdAt: -1, _id: -1 })
-    .limit(limit)
-    .populate<{ product: { _id: Id; name: string } | null }>({ path: "product", select: "name" })
-    .lean();
-  return rows.map((r) => ({
+  const [rows, total] = await Promise.all([
+    StockAdjustment.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .populate<{ product: { _id: Id; name: string } | null }>({ path: "product", select: "name" })
+      .lean(),
+    StockAdjustment.countDocuments(filter),
+  ]);
+  const adjustments = rows.map((r) => ({
     id: r._id.toString(),
     createdAt: (r.createdAt as Date).toISOString(),
     productId: r.product?._id.toString() ?? "",
@@ -214,6 +218,7 @@ export async function getRecentStockAdjustments(limit = 20, productId?: string):
     reason: r.reason,
     note: r.note ?? "",
   }));
+  return { adjustments, total, pages: Math.max(1, Math.ceil(total / pageSize)) };
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {

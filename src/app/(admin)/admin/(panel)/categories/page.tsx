@@ -2,15 +2,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { Flash } from "@/components/admin/flash";
 import { PageHeader } from "@/components/admin/page-header";
+import { Pagination } from "@/components/admin/pagination";
 import { deleteCategoryAction } from "@/lib/admin/actions/categories";
 import { listCategories } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/session";
+import { readPage, readPageSize } from "@/lib/admin/pagination";
 
 export const metadata = { title: "Categories" };
 
 export default async function AdminCategoriesPage({ searchParams }: PageProps<"/admin/categories">) {
   await requireAdmin("/admin/categories");
-  const [params, categories] = await Promise.all([searchParams, listCategories()]);
+  const [params, allCategories] = await Promise.all([searchParams, listCategories()]);
+  const pageSize = readPageSize(params.limit);
+  const pages = Math.max(1, Math.ceil(allCategories.length / pageSize));
+  const page = Math.min(pages, readPage(params.page));
+  const categories = allCategories.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <>
@@ -67,6 +73,7 @@ export default async function AdminCategoriesPage({ searchParams }: PageProps<"/
           </tbody>
         </table>
       </div>
+      <Pagination page={page} pages={pages} limit={pageSize} href={(p) => `/admin/categories?${new URLSearchParams({ ...(pageSize !== 20 && { limit: String(pageSize) }), page: String(p) })}`} />
     </>
   );
 }
