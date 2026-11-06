@@ -64,7 +64,7 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
       <PageHeader
         title={<span className="flex flex-wrap items-center gap-3">Order {order.number}<CopyOrderNumberButton orderNumber={order.number} /></span>}
         description={`Placed ${dateTime.format(new Date(order.createdAt))}`}
-        actions={<div className="flex items-center gap-3"><OrderStatusPill status={order.status} />{order.status === "delivered" && <PrintReceiptButton />}</div>}
+        actions={<div className="flex items-center gap-3"><OrderStatusPill status={order.status} /><PrintReceiptButton /></div>}
       />
       <Flash notice={query.notice} error={query.error} />
 
@@ -169,8 +169,7 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
           <OrderSummary subtotal={order.subtotal} deliveryFee={order.deliveryFee} total={order.total} />
         </div>
       </div>
-      {order.status === "delivered" && (
-        <article className="receipt-print" aria-label="Order receipt">
+      <article className="receipt-print" aria-label="Order receipt">
           <header className="receipt-header">
             <p className="receipt-brand">{SITE.name}</p>
             <p>{SITE.phone}</p>
@@ -205,8 +204,7 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
             </dl>
           </section>
           <p className="receipt-thanks">Thank you for your order.</p>
-        </article>
-      )}
+      </article>
     </>
   );
 }
