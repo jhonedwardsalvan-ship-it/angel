@@ -15,9 +15,9 @@ export function PageSizeSelect({ value }: { value: number }) {
   }
 
   return (
-    <label className="flex items-center gap-2 text-sm text-ink-muted">
+    <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm text-ink-muted">
       Rows per page
-      <select className="input min-h-9 py-1 text-sm" value={value} onChange={(event) => changePageSize(event.target.value)}>
+      <select className="input min-h-9 w-24 shrink-0 py-1 text-sm" value={value} onChange={(event) => changePageSize(event.target.value)}>
         {[20, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
       </select>
     </label>
