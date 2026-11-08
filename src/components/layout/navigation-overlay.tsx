@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatedDots, BloomingFlower } from "./blooming";
 
 const SHOW_AFTER_MS = 200; // fast navigations finish before this, so they never flash the overlay
-const GIVE_UP_AFTER_MS = 15000;
+const GIVE_UP_AFTER_MS = 8000;
 
 /** Same-site URL of a click or GET form submit that leads to another page, or null. */
 function destination(event: Event): URL | null {
@@ -35,6 +35,14 @@ export function NavigationOverlay() {
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
   const timers = useRef<number[]>([]);
 
+  // Clear completed navigations instead of retaining their old source URL.
+  // Otherwise navigating back to that URL can make a stale overlay reappear.
+  useEffect(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setPendingFrom(null);
+  }, [here]);
+
   useEffect(() => {
     function onNavigate(event: Event) {
       const url = destination(event);
@@ -46,6 +54,7 @@ export function NavigationOverlay() {
       const pending = timers.current;
       pending.forEach(clearTimeout);
       pending.length = 0;
+      setPendingFrom(null);
       pending.push(
         window.setTimeout(() => setPendingFrom(from), SHOW_AFTER_MS),
         window.setTimeout(() => setPendingFrom(null), GIVE_UP_AFTER_MS),
