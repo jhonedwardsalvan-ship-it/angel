@@ -123,6 +123,13 @@ export const HeartIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const EyeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+    <circle cx="12" cy="12" r="2.5" />
+  </Icon>
+);
+
 export const CommentIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M20.25 11.6c0 4-3.7 7.15-8.25 7.15-1.1 0-2.15-.18-3.1-.52L4.5 19.5l1.3-3.3A6.7 6.7 0 0 1 3.75 11.6c0-3.95 3.7-7.1 8.25-7.1s8.25 3.15 8.25 7.1Z" />

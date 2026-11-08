@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HeartIcon, PlayIcon, TikTokIcon } from "@/components/icons";
+import { EyeIcon, PlayIcon, TikTokIcon } from "@/components/icons";
 import type { StoreTikTokVideo } from "@/lib/tiktok/queries";
 import { SectionHeading } from "./section-heading";
 
@@ -35,10 +35,10 @@ export function TikTokSection({ videos }: { videos: StoreTikTokVideo[] }) {
                       <PlayIcon className="ml-0.5" />
                     </span>
                   </span>
-                  {v.likeCount > 0 && (
+                  {v.viewCount > 0 && (
                     <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-pill bg-inverse/70 px-2 py-1 text-xs text-ink-inverse">
-                      <HeartIcon className="size-3.5" />
-                      {compact(v.likeCount)}
+                      <EyeIcon className="size-3.5" />
+                      {compact(v.viewCount)}
                     </span>
                   )}
                 </div>
