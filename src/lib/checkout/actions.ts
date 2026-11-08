@@ -31,7 +31,7 @@ export type CheckoutState =
   | undefined;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_PATTERN = /^[+\d][\d\s()-]{6,19}$/;
+const PHONE_PATTERN = /^[\d ]+$/;
 
 function orderNumber() {
   return `AL-${Date.now().toString(36).toUpperCase()}-${randomBytes(2).toString("hex").toUpperCase()}`;
@@ -63,7 +63,9 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
   const fieldErrors: Partial<Record<CheckoutField, string>> = {};
   if (!EMAIL_PATTERN.test(values.email)) fieldErrors.email = "Enter a valid email address.";
   if (!values.name) fieldErrors.name = "Enter your name.";
-  if (!PHONE_PATTERN.test(values.phone)) fieldErrors.phone = "Enter a valid phone number.";
+  if (!PHONE_PATTERN.test(values.phone) || values.phone.replace(/\D/g, "").length !== 11) {
+    fieldErrors.phone = "Enter an 11-digit phone number.";
+  }
   if (!values.recipientName) fieldErrors.recipientName = "Who is receiving the flowers?";
   if (values.address.length < 8) fieldErrors.address = "Enter the full delivery address.";
   if (!values.city) fieldErrors.city = "Enter the city.";

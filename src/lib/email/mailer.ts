@@ -16,10 +16,12 @@ function gmailConfig() {
 let transporter: Transporter | null = null;
 
 export function mailerConfigured() {
-  return gmailConfig() !== null;
+  return process.env.EMAIL_TURN_OFF !== "true" && gmailConfig() !== null;
 }
 
 export async function sendMail(message: { to: string; subject: string; text: string; html: string; replyTo?: string }) {
+  if (process.env.EMAIL_TURN_OFF === "true") return false;
+
   const config = gmailConfig();
   if (!config) return false;
   transporter ??= nodemailer.createTransport({ service: "gmail", auth: config });

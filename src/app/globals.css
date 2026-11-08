@@ -881,7 +881,6 @@
   }
   .receipt-header { text-align: center; margin-bottom: 2rem; }
   .receipt-header h1 { margin: 1rem 0 .25rem; font-size: 22pt; }
-  .receipt-brand { font-size: 18pt; font-weight: 700; }
   .receipt-print section { margin: 1.5rem 0; }
   .receipt-print h2 { margin-bottom: .5rem; font-size: 14pt; font-weight: 700; }
   .receipt-print table { width: 100%; border-collapse: collapse; }

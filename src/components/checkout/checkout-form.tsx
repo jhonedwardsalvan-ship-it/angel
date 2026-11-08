@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ChangeEvent, type ReactNode } from "react";
 import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
 import { placeOrderAction, type CheckoutField } from "@/lib/checkout/actions";
@@ -33,8 +33,19 @@ function ErrorText({ id, message }: { id: string; message?: string }) {
 
 export function CheckoutForm({ total, minDate, maxDate, leadDays, defaults }: CheckoutFormProps) {
   const [state, action, pending] = useActionState(placeOrderAction, undefined);
+  const [phone, setPhone] = useState<string | undefined>(undefined);
   const v = (f: CheckoutField) => state?.values?.[f];
   const e = (f: CheckoutField) => state?.fieldErrors?.[f];
+
+  function updatePhone(event: ChangeEvent<HTMLInputElement>) {
+    const digits = event.currentTarget.value.replace(/\D/g, "").slice(0, 11);
+    const formatted = digits.length > 7
+      ? `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`
+      : digits.length > 4
+        ? `${digits.slice(0, 4)} ${digits.slice(4)}`
+        : digits;
+    setPhone(formatted);
+  }
 
   return (
     <form action={action} noValidate className="stack gap-8">
@@ -43,7 +54,7 @@ export function CheckoutForm({ total, minDate, maxDate, leadDays, defaults }: Ch
       <Fieldset legend="Contact">
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField label="Your name" name="name" autoComplete="name" required defaultValue={v("name") ?? defaults.name} error={e("name")} />
-          <FormField label="Phone" name="phone" type="tel" autoComplete="tel" inputMode="tel" required placeholder="0917 123 4567" defaultValue={v("phone")} error={e("phone")} />
+          <FormField label="Phone" name="phone" type="tel" autoComplete="tel" inputMode="numeric" maxLength={13} required placeholder="0917 123 4567" value={phone ?? v("phone") ?? ""} onChange={updatePhone} error={e("phone")} />
         </div>
         <FormField label="Email" name="email" type="email" autoComplete="email" inputMode="email" required hint="For your order records." defaultValue={v("email") ?? defaults.email} error={e("email")} />
       </Fieldset>

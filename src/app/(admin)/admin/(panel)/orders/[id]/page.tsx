@@ -10,6 +10,7 @@ import { OrderSummary } from "@/components/cart/order-summary";
 import { FormField } from "@/components/forms/form-field";
 import { SelectField } from "@/components/forms/select-field";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { Logo } from "@/components/layout/logo";
 import { updateOrderStatusAction, updateTrackingAction } from "@/lib/admin/actions/orders";
 import { getOrder } from "@/lib/admin/queries";
 import { DELIVERY_SLOTS, PAYMENT_METHODS } from "@/lib/checkout/delivery";
@@ -171,7 +172,7 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
       </div>
       <article className="receipt-print" aria-label="Order receipt">
           <header className="receipt-header">
-            <p className="receipt-brand">{SITE.name}</p>
+            <Logo className="mx-auto h-14 w-auto" />
             <p>{SITE.phone}</p>
             <h1>Order receipt</h1>
             <p>Order {order.number}</p>
